@@ -246,7 +246,7 @@ Henüz her byte’ın anlamını bilmiyor olsak da, tekrarlı alanlar gözlemlen
 - **Sarı arkaplanlı sütunlar** → Süpürgeden bataryaya giden paketler  
 - **Mavi arkaplanlı sütunlar** → Bataryadan süpürgeye giden paketler
 
-### 📊 Örnek [Excel](DOCUMENT/example_packet_table.xlsx) Görseli
+### 📊 Örnek [Excel](DOCUMENT/G11_protocol_analyze.xlsx) Görseli
 
 <img src="ASSETS/example_packet_table.png" alt="Excel Paket Tablosu Örneği" width="800">
 
