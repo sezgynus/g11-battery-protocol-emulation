@@ -513,11 +513,11 @@ Süpürgeden gelen **tek paket tipi** 0x41 kaynak ID’li paket incelenmiştir.
 
 - Tüm veri seti boyunca değişen alanlar:  3, 4, 5 ve 6. byte'lar.
 
-      5. ve 6. byte yalnızca 0 ve 1 değerleri alabildiği için şimdilik sonraya bırakılmıştır
+      6. byte yalnızca 0 ve 1 değerleri alabildiği için şimdilik sonraya bırakılmıştır
 
-### 🔹 3. ve 4. Byte – Motor Devri / Commanded Velocity
+### 🔹 3. 4. ve 5. Byte – Motor Devri / Commanded Velocity
 
-- 3. ve 4. byte concat edilerek 16 bitlik değer hesaplanmıştır.  
+- 3. 4. ve 5. byte concat edilerek 24 bitlik değer hesaplanmıştır.  
 - Grafikte minimum: 0, maksimum: 128000 değerleri gözlemlenmiştir.  
 - Akım ve güç grafiklerinde pattern ile uyum gözlemlenmiştir.
 
@@ -525,3 +525,27 @@ Süpürgeden gelen **tek paket tipi** 0x41 kaynak ID’li paket incelenmiştir.
 > Ancak grafiğin bu kadar stabil olması ve akım ile güç alanlarındaki dalgalanmaların görülmemesi, bunun bir **actual velocity** olmadığını, yalnızca **motor sürücüye gönderilen commanded velocity** değeri olduğunu düşündürmektedir.
 
 <img src="ASSETS/motor_speed.png" alt="Motor Commanded Velocity Graph" width="600"> <img src="ASSETS/motor_rpm.png" alt="Motor Commanded Velocity Graph" width="600">
+
+#### 🔹 6. Byte – Mod Bayrağı & Tetik Durumu
+
+- **6. byte**: Tamamen **tetik basma / bırakma durumlarını** göstermektedir.  
+  → 4 dakikalık kullanım senaryosunda tüm değişiklikler doğrulanmıştır.  
+
+Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenmemiştir.
+
+---
+
+## 📊 Özet – Çözülen Paket Alanları
+
+| Kaynak ID | Paket Başlangıç | Paket Bitiş | Alan | Açıklama |
+|-----------|----------------|-------------|------|----------|
+| 0x45      | 0xFC           | 0xFB        | 3.bit (byte 3) | Şarj aleti takılma durumu (flag) |
+|           |                |             | 4.byte        | Şarj yüzdesi (%) |
+|           |                |             | 5-6.byte      | BMS hata / durum alanları (belirsiz) |
+| 0x42      | 0xFC           | 0xFB        | 3-4.byte concat | Güç tüketimi (Watt) |
+|           |                |             | 5-6.byte concat | Akım (A) / muhtemelen raw ADC değeri |
+|           |                |             | 7.byte        | Motor aktif / deaktif durumu |
+| 0x41      | 0xFB           | 0xFC        | 3-4.byte concat | Motor devri / Commanded Velocity |
+|           |                |             | 5.byte        | Turbo mod bayrağı / koruma flag |
+|           |                |             | 6.byte        | Tetik basma / bırakma durumu |
+
