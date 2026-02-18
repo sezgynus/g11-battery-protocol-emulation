@@ -184,6 +184,30 @@ Capture ve ekran görüntüleri:
 <img src="ASSETS/Logic_Sesion1.png" alt="Logic Analyzer Capture" width="400"> <img src="ASSETS/valid_uart_configuration.png" alt="Protocol Analyzer Konfigürasyonu" width="400">
 
 Byte dizileri artık **istikrarlı ve tekrar eden korelasyonlar** göstermeye başladı.  
-Bu sayede protokolün fiziksel ve temel veri yapısı net bir şekilde ortaya çıktı.
 
-📌 Bu aşamadan sonra **alan tespiti ve byte-level analiz** adımına geçilmiştir.
+## 🔄 Master/Slave Tespiti
+
+Bit frameleri doğru şekilde yakalandıktan sonra, byte-level analiz ve
+paket çözümlemesi için hangi tarafın master (sorgulayan) ve hangi tarafın
+slave (cevaplayan) olduğunu belirlemek gerekiyordu.
+
+Protokol tek hatlı olduğundan:
+
+- Bir taraf sürekli dinlemede kalıyor  
+- Diğer taraf sorgulama (polling) yapıyor  
+
+Hangi tarafın master olduğunu anlamak için:
+
+1. Haberleşme hattı geçici olarak kesildi  
+2. Süpürge çalıştırıldı  
+3. İlk konuşma denemesi her iki taraftan ayrı ayrı dinlendi  
+
+### 📌 Sonuç
+
+- **Master / Polling yapan taraf:** Süpürge  
+- **Slave / Cevap veren taraf:** Batarya
+
+Bu tespit, veri setinin doğru şekilde analiz edilmesini ve
+sonraki aşama olan **alan tespiti / field identification** için sağlam bir temel sağlar.
+
+
