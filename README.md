@@ -344,7 +344,7 @@ EĞER([@1]=42;
 
 <img src="ASSETS/excel_checksum_validation.png" alt="Excel Checksum Validation" width="800">
 
-# 3️⃣ Alan Tespiti (Devam – Payload Analizi)
+# 3️⃣ Alan Tespiti (Payload Analizi)
 
 Payload içindeki alanları belirlemek için yaklaşık **4 dakikalık bir kullanım senaryosu** hazırlandı.  
 Senaryoda hangi anda hangi işlemin yapıldığı tabloya döküldü:
