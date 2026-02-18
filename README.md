@@ -210,4 +210,59 @@ Hangi tarafın master olduğunu anlamak için:
 Bu tespit, veri setinin doğru şekilde analiz edilmesini ve
 sonraki aşama olan **alan tespiti / field identification** için sağlam bir temel sağlar.
 
+## 📦 Paket Başlangıç ve Bitiş Condition’ları
 
+Logic analyzer ile alınan byte akışı incelendiğinde, tekrarlı bir pattern gözlemlenmiştir:
+
+- **0xFB** → Paket başlangıcı  
+- **0xFC** → Paket sonu  
+
+Dikkat çekici nokta:  
+- 0xFB’den sonra 12 byte ileride 0xFC  
+- 0xFC’den sonra 8 veya 9 byte sonra tekrar 0xFB  
+
+Bu patternlerin paket başı ve paket sonu condition’ları olduğu varsayılmıştır.
+
+---
+
+## 📝 Excel Tablosuna Aktarım
+
+Bu paket başı/sonu condition’larına göre, örnek bir konuşma akışı:
+
+- Her 0xFB…0xFC paketi → Süpürgeden bataryaya  
+- Her 0xFC…0xFB paketi → Bataryadan süpürgeye
+
+Bu paketleri **satırlara ayırarak Excel tablosuna** döktüm.  
+Henüz her byte’ın anlamını bilmiyor olsak da, tekrarlı alanlar gözlemlenebiliyordu.
+
+- **Sarı arkaplanlı sütunlar** → Süpürgeden bataryaya giden paketler  
+- **Mavi arkaplanlı sütunlar** → Bataryadan süpürgeye giden paketler
+
+### 📊 Örnek Excel Görseli
+
+<img src="ASSETS/example_packet_table.png" alt="Excel Paket Tablosu Örneği" width="800">
+
+## 🔗 Paket İçi Korelasyon ve İlk Byte Analizi
+
+Excel tablosunu dikkatle incelediğimizde bazı anlamlı korelasyonlar ortaya çıkmıştır:
+
+Örnek bir süpürge → batarya paketi:
+
+| Byte # |0    | 1   | 2  | 3  | 4 | 5| 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
+|--------|-----|-----|----|---|---|---|---|---|---|----|----|----|----|----|
+| Paket  | FB  | 41  | 45 | 0B| 00| 00| 00| 00| 00| 09 | 00 | 9A | 00 | FC |
+
+Karşılık gelen batarya → süpürge paketi:
+
+| Byte # |0    | 1   | 2   | 3  | 4  | 5  | 6  | 7  | 8  | 9  | 10 | 11 | 12 | 13 |
+|--------|-----|-----|----|----|----|----|----|----|----|----|----|----|----|----|
+| Paket  | FC  | 45  | 41 | 44 | 64 | 64 | 00 | 92 | 01 | FB |    |    |    |    |
+
+### 📌 İlk Korelasyon Çıkarımı
+
+- **1. byte (0x41)** → Kaynak ID (source ID)  
+- **2. byte (0x45)** → Hedef ID (destination ID)  
+
+Önce süpürgeden gelen pakette, ardından bataryadan gelen pakette bu değerlerin karşılıklı olarak eşleştiği gözlemlenmiştir.  
+
+Bu korelasyon, **master/slave ve adresleme mekanizması** hakkında ilk ipuçlarını vermektedir.
