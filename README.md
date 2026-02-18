@@ -535,17 +535,60 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 
 ---
 
-## 📊 Özet – Çözülen Paket Alanları
+# 📝 Sonuç: Çözülen Paketler ve Alanlar
 
-| Kaynak ID | Paket Başlangıç | Paket Bitiş | Alan | Açıklama |
-|-----------|----------------|-------------|------|----------|
-| 0x45      | 0xFC           | 0xFB        | 3.bit (byte 3) | Şarj aleti takılma durumu (flag) |
-|           |                |             | 4.byte        | Şarj yüzdesi (%) |
-|           |                |             | 5-6.byte      | BMS hata / durum alanları (belirsiz) |
-| 0x42      | 0xFC           | 0xFB        | 3-4.byte concat | Güç tüketimi (Watt) |
-|           |                |             | 5-6.byte concat | Akım (A) / muhtemelen raw ADC değeri |
-|           |                |             | 7.byte        | Motor aktif / deaktif durumu |
-| 0x41      | 0xFB           | 0xFC        | 3-4.byte concat | Motor devri / Commanded Velocity |
-|           |                |             | 5.byte        | Turbo mod bayrağı / koruma flag |
-|           |                |             | 6.byte        | Tetik basma / bırakma durumu |
+## 1️⃣ Süpürgeden Motora Gönderilen Paket (0x41 Kaynak ID)
 
+| Byte | Field | Açıklama |
+|------|------|----------|
+| 0    | Packet Start | 0xFB |
+| 1    | Source ID | 0x41 |
+| 2    | Target ID | 0x42/0x43/0x44/0x45 |
+| 3    | Motor Speed Low Byte | Motor devir değeri, 16–24 bit |
+| 4    | Motor Speed Mid Byte | Motor devir değeri, 16–24 bit |
+| 5    | Motor Speed High Byte | Motor devir değeri, 16–24 bit |
+| 6    | Trigger Status | 0: Basılmamış, 1: Basılı |
+| 7    | Unknown | Henüz çözülmedi |
+| 8    | Unknown | Henüz çözülmedi |
+| 9    | Unknown | Henüz çözülmedi |
+| 10   | Unknown | Henüz çözülmedi |
+| 11   | Checksum_L | Paket checksum |
+| 12   | Checksum_H | Paket checksum |
+| 13   | Packet End | 0xFC |
+
+---
+
+## 2️⃣ Bataryadan Süpürgeye Gönderilen Paket (0x45 Kaynak ID)
+
+| Byte | Field | Açıklama |
+|------|------|----------|
+| 0    | Packet Start | 0xFC |
+| 1    | Source ID | 0x45 |
+| 2    | Target ID | 0x41 |
+| 3    | Charger Status | 3. bit (0: Çıkarıldı, 1: Takıldı) |
+| 4    | Battery Level | % cinsinden şarj durumu |
+| 5    | Unknown | Henüz çözülmedi |
+| 6    | Unknown | Henüz çözülmedi |
+| 7    | Checksum_L | Paket checksum |
+| 8    | Checksum_H | Paket checksum |
+| 9    | Packet End | 0xFB |
+
+---
+
+## 3️⃣ Bataryadan Süpürgeye Gönderilen Paket (0x42 Kaynak ID)
+
+| Byte | Field | Açıklama |
+|------|------|----------|
+| 0    | Packet Start | 0xFC |
+| 1    | Source ID | 0x42 |
+| 2    | Target ID | 0x41 |
+| 3    | Power_L | Watt cinsinden güç tüketimi (16-bit) |
+| 4    | Power_H | Watt cinsinden güç tüketimi (16-bit) |
+| 5    | Current_L | Akım verisi (16-bit, birim tahmini) |
+| 6    | Current_H | Akım verisi (16-bit, birim tahmini) |
+| 7    | Motor Active Flag | 1: Motor çalışıyor, 0: Motor durdu |
+| 8    | Unknown | Henüz çözülmedi |
+| 9    | Unknown | Henüz çözülmedi |
+| 10   | Checksum_L | Paket checksum |
+| 11   | Checksum_H | Paket checksum |
+| 12   | Packet End | 0xFB |
