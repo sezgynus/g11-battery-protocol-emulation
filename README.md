@@ -507,4 +507,21 @@ Grafik analizinde:
 - Gözlemlerde bu davranış tüm kullanım senaryosu boyunca tutarlıydı.  
 - Bu nedenle, **grafik oluşturmaya gerek kalmadan** bu byte doğrudan **Motor Aktif/Deaktif (Motor Status)** olarak işaretlendi.
 
+## 🔹 Süpürge Paketleri: 0x41 Kaynak ID
 
+Süpürgeden gelen **tek paket tipi** 0x41 kaynak ID’li paket incelenmiştir.  
+
+- Tüm veri seti boyunca değişen alanlar:  3, 4, 5 ve 6. byte'lar.
+
+      5. ve 6. byte yalnızca 0 ve 1 değerleri alabildiği için şimdilik sonraya bırakılmıştır
+
+### 🔹 3. ve 4. Byte – Motor Devri / Commanded Velocity
+
+- 3. ve 4. byte concat edilerek 16 bitlik değer hesaplanmıştır.  
+- Grafikte minimum: 0, maksimum: 128000 değerleri gözlemlenmiştir.  
+- Akım ve güç grafiklerinde pattern ile uyum gözlemlenmiştir.
+
+> Bu değerler, bu alanın motor devri olduğunu düşündürmüştür, çünkü 128000 RPM gibi bir değer bir vakum motoru için olması gereken yüksek devirdir.  
+> Ancak grafiğin bu kadar stabil olması ve akım ile güç alanlarındaki dalgalanmaların görülmemesi, bunun bir **actual velocity** olmadığını, yalnızca **motor sürücüye gönderilen commanded velocity** değeri olduğunu düşündürmektedir.
+
+<img src="ASSETS/motor_speed.png" alt="Motor Commanded Velocity Graph" width="600"> <img src="ASSETS/motor_rpm.png" alt="Motor Commanded Velocity Graph" width="600">
