@@ -22,16 +22,15 @@ Bir sistemi gerçekten anlamanın yolu, onu yeniden inşa edebilmekten geçer.
 
 Bu proje aşağıdaki deterministik mühendislik adımlarını takip etmiştir:
 
-1. Non-Invasive Interface Analysis  
-2. Veri Yakalama (Data Capture)  
-3. Alan Tespiti (Field Identification)  
-4. Algoritma Doğrulama (Checksum Reconstruction)  
-5. Protokol Emülasyonu (Protocol Emulation)  
-6. Donanım Arayüz Tasarımı (Hardware Interface Design)  
-
+1. Arayüz Karakterizasyonu
+2. Veri Yakalama
+3. Alan Tespiti
+4. Algoritma Doğrulama
+5. Protokol Emülasyonu
+6. Donanım Arayüz Tasarımı
 ---
 
-# 1️⃣ Non-Invasive Interface Analysis
+# 1️⃣ Arayüz Karakterizasyonu
 
 Batarya paketi ve süpürge gövdesi açılmadan analiz yapılması hedeflenmiştir.
 Bu nedenle konnektör pin fonksiyonları dolaylı ve non-invasive yöntemlerle
