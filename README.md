@@ -118,9 +118,7 @@ Bu sayede:
 
 ### 🔖 Etiketlenmiş Konnektör Görselleri
 
-![Battery Connector Labeling](ASSETS/battery_connector_labeled.jpg)
-
-![Vacuum Connector Labeling](ASSETS/vacuum_connector_labeled.jpg)
+<img src="ASSETS/battery_connector_labeled.jpg" alt="Battery Connector Labeling" width="500"> <img src="ASSETS/vacuum_connector_labeled.jpg" alt="Vacuum Connector Labeling" width="400">
 
 ---
 
@@ -151,8 +149,9 @@ Hattın tek hatlı olması nedeniyle ilk olarak **1-Wire protokolü** varsayılm
 
 Capture ve ekran görüntüleri:
 
-[Capture Dosyası (.sal)](DOCUMENT/Session%200.sal)  
-![Logic Analyzer Capture](ASSETS/Logic_Sesion0.png)  
+[Capture Dosyası (Session 0.sal)](DOCUMENT/Session%200.sal)
+
+<img src="ASSETS/Logic_Sesion0.png" alt="Logic Analyzer Capture" width="400">
 
 Bu gözlemler, hattın **standart 1-Wire protokolü olmadığı** ihtimalini güçlendirdi.
 
@@ -181,8 +180,8 @@ parametreleri ile **frameler tam olarak oturdu**.
 Capture ve ekran görüntüleri:
 
 [Capture Dosyası (.sal)](DOCUMENT/Session%201.sal)  
-![Logic Analyzer Capture](ASSETS/Logic_Sesion1.png)  
-![Protocol Analyzer Konfigürasyonu](ASSETS/valid_uart_configuration.png)
+
+<img src="ASSETS/Logic_Sesion1.png" alt="Logic Analyzer Capture" width="400"> <img src="ASSETS/valid_uart_configuration.png" alt="Protocol Analyzer Konfigürasyonu" width="400">
 
 Byte dizileri artık **istikrarlı ve tekrar eden korelasyonlar** göstermeye başladı.  
 Bu sayede protokolün fiziksel ve temel veri yapısı net bir şekilde ortaya çıktı.
