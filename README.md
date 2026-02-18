@@ -134,6 +134,14 @@ Bir sonraki aşamada uygun level shifting çözümü gereklidir.
 
 # 2️⃣ Veri Yakalama ve Protokol Keşfi Denemeleri
 
+### 🔹 Level Shifter Görselleri
+
+#### 1. Delikli Pertinaks Üzerinde Yapılmış Devre
+<img src="ASSETS/level_shifter_photo1.jpg" alt="" width="300"> <img src="ASSETS/level_shifter_photo2.jpg" alt="" width="300">
+
+#### 2. Şematik Görseli
+![Level Shifter Schematic](ASSETS/bidirectonal_level_shifter_schemetic.jpg)
+
 Batarya konnektörü ve level shifter devresi kurulduktan sonra
 S hattından jumper alınıp logic analyzer girişine bağlanmıştır.  
 Hattın güvenli şekilde dinlenmesi sağlanmıştır.
@@ -238,7 +246,7 @@ Henüz her byte’ın anlamını bilmiyor olsak da, tekrarlı alanlar gözlemlen
 - **Sarı arkaplanlı sütunlar** → Süpürgeden bataryaya giden paketler  
 - **Mavi arkaplanlı sütunlar** → Bataryadan süpürgeye giden paketler
 
-### 📊 Örnek Excel Görseli
+### 📊 Örnek [Excel](DOCUMENT/example_packet_table.xlsx) Görseli
 
 <img src="ASSETS/example_packet_table.png" alt="Excel Paket Tablosu Örneği" width="800">
 
