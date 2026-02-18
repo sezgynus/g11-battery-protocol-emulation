@@ -104,6 +104,26 @@ Bu davranış hattın communication line olduğunu güçlü şekilde göstermekt
 
 ---
 
+### 🏷 Pin Mapping Etiketleme
+
+Daha sonraki analiz çalışmalarında bağlantı hatalarını önlemek ve ölçüm
+tekrar edilebilirliğini sağlamak amacıyla tespit edilen pin mapping,
+hem batarya hem de süpürge konnektörü üzerinde fiziksel olarak etiketlenmiştir.
+
+Bu sayede:
+
+- Ölçüm noktaları standardize edilmiştir.
+- Yanlış bağlantı riski minimize edilmiştir.
+- Veri yakalama aşamasında referans karışıklığı önlenmiştir.
+
+### 🔖 Etiketlenmiş Konnektör Görselleri
+
+![Battery Connector Labeling](ASSETS/battery_connector_labeled.jpg)
+
+![Vacuum Connector Labeling](ASSETS/vacuum_connector_labeled.jpg)
+
+---
+
 ## 📌 Sonuç
 
 - Güç hatları ayrıştırılmıştır.
@@ -113,3 +133,58 @@ Bu davranış hattın communication line olduğunu güçlü şekilde göstermekt
 
 Logic seviyesi 24V olduğu için doğrudan logic analyzer bağlantısı mümkün değildir.
 Bir sonraki aşamada uygun level shifting çözümü gereklidir.
+
+# 2️⃣ Veri Yakalama ve Protokol Keşfi Denemeleri
+
+Batarya konnektörü ve level shifter devresi kurulduktan sonra
+S hattından jumper alınıp logic analyzer girişine bağlanmıştır.  
+Hattın güvenli şekilde dinlenmesi sağlanmıştır.
+
+---
+
+## 🔍 İlk Analiz: 1-Wire Hipotezi
+
+Hattın tek hatlı olması nedeniyle ilk olarak **1-Wire protokolü** varsayılmıştır.  
+
+- Bazı anlamlı byte'lar gözlemlense de  
+- Çok sayıda framing hatası ve korelasyonsuz byte dizileri mevcuttu  
+
+Capture ve ekran görüntüleri:
+
+[Capture Dosyası (.sal)](DOCUMENT/Session%200.sal)  
+![Logic Analyzer Capture](ASSETS/Logic_Sesion0.png)  
+
+Bu gözlemler, hattın **standart 1-Wire protokolü olmadığı** ihtimalini güçlendirdi.
+
+---
+
+## ⚡ İkinci Analiz: Half-Duplex Single-Wire UART Hipotezi
+
+Daha sonra hattın **half-duplex single-wire UART** olabileceği üzerine yoğunlaşıldı.  
+
+- En yaygın standart baudrate değerlerinde sinyal analiz edildi  
+- Hala çok sayıda framing hatası ve korelasyon gözlemlendi  
+
+---
+
+## ✅ Çözüm: Invert ve Doğru Parametreler
+
+Son bir deneme olarak sinyal invert edilerek analiz edildi ve:
+
+- **8N1 standardı**  
+- **9600 baudrate**  
+- **Inverted signal**
+
+parametreleri ile **frameler tam olarak oturdu**.  
+
+
+Capture ve ekran görüntüleri:
+
+[Capture Dosyası (.sal)](DOCUMENT/Session%201.sal)  
+![Logic Analyzer Capture](ASSETS/Logic_Sesion1.png)  
+![Protocol Analyzer Konfigürasyonu](ASSETS/valid_uart_configuration.png)
+
+Byte dizileri artık **istikrarlı ve tekrar eden korelasyonlar** göstermeye başladı.  
+Bu sayede protokolün fiziksel ve temel veri yapısı net bir şekilde ortaya çıktı.
+
+📌 Bu aşamadan sonra **alan tespiti ve byte-level analiz** adımına geçilmiştir.
