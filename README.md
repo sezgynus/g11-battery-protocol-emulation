@@ -344,3 +344,167 @@ EĞER([@1]=42;
 
 <img src="ASSETS/excel_checksum_validation.png" alt="Excel Checksum Validation" width="800">
 
+# 3️⃣ Alan Tespiti (Devam – Payload Analizi)
+
+Payload içindeki alanları belirlemek için yaklaşık **4 dakikalık bir kullanım senaryosu** hazırlandı.  
+Senaryoda hangi anda hangi işlemin yapıldığı tabloya döküldü:
+
+| Zaman    | Olay                                           |
+|----------|-----------------------------------------------|
+| 00:04:00 | Açılış                                        |
+| 00:07:00 | Mod Değişimi: AUTO → TURBO                    |
+| 00:11:00 | Mod Değişimi: TURBO → ECO                     |
+| 00:13:00 | Tetiğe basma – motoru çalıştırma (ECO)       |
+| 00:20:00 | Tetiği bırakma – motoru durdurma (ECO)       |
+| 00:21:00 | Tetiğe basma – motoru çalıştırma (ECO)       |
+| 00:27:00 | Tetiği bırakma – motoru durdurma (ECO)       |
+| 00:29:00 | Mod Değişimi: ECO → AUTO                      |
+| 00:30:00 | Tetiğe basma – motoru çalıştırma (AUTO)      |
+| 00:36:00 | Tetiği bırakma – motoru durdurma (AUTO)      |
+| 00:38:00 | Tetiğe basma – motoru çalıştırma (AUTO)      |
+| 00:42:00 | Tetiği bırakma – motoru durdurma (AUTO)      |
+| 00:43:00 | Mod Değişimi: AUTO → TURBO                    |
+| 00:45:00 | Tetiğe basma – motoru çalıştırma (TURBO)     |
+| 00:52:00 | Tetiği bırakma – motoru durdurma (TURBO)     |
+| 00:53:00 | Tetiğe basma – motoru çalıştırma (TURBO)     |
+| 01:04:00 | Tetiği bırakma – motoru durdurma (TURBO)     |
+| 01:05:00 | Tetik kilidi aktif                             |
+| 01:08:00 | Tetiğe basma – motoru çalıştırma (TURBO)     |
+| 01:08:00 | Tetiği bırakma                                 |
+| 01:15:00 | Vakumu tıkama                                 |
+| 01:16:00 | Vakumu açma                                   |
+| 01:17:00 | Vakumu tıkama                                 |
+| 01:18:00 | Vakumu açma                                   |
+| 03:03:00 | Tetiğe basma – motoru durdurma (TURBO)       |
+| 03:04:00 | Tetiği bırakma                                 |
+| 03:06:00 | Tetiğe basma – motoru çalıştırma (TURBO)     |
+| 03:06:00 | Tetiği bırakma                                 |
+| 03:25:00 | Mod Değişimi: TURBO → ECO                     |
+| 03:29:00 | Mod Değişimi: ECO → AUTO                      |
+| 03:31:00 | Mod Değişimi: AUTO → TURBO                     |
+| 03:34:00 | Mod Değişimi: TURBO → ECO                     |
+| 03:40:00 | Tetiğe basma – motoru durdurma (TURBO)       |
+| 03:40:00 | Tetiği bırakma                                 |
+| 03:47:00 | Şarj aleti takma (%63)                        |
+| 03:52:00 | Şarj aleti çıkarma (%63)                      |
+| 03:56:00 | SON                                           |
+
+---
+
+## 📊 Payload Korelasyonu ve Battery Level
+
+- Kullanım senaryosu sırasında **logic analyzer** ile aynı anda veri capture edildi.  
+- Excel tablosuna paketler aktarıldı, önceki formüller ve sütunlar kullanıldı.  
+- Süpürgenin ekranında **batarya şarj seviyesi** canlı olarak gösteriliyor, dolayısıyla bataryadan gelen paketlerde bir **Battery Level** alanı olması gerektiği varsayıldı.  
+
+### 🔹 Battery Level Alanı Tespiti
+
+- Bataryadan süpürgeye gönderilen paketler (0xFC ile başlar, 0xFB ile biter) filtrelendi.  
+- Kaynak ID’si **0x45** olan paketlerin **4. byte’ı** zamanla düşen trend gösterdi:  
+  - Başlangıçta decimal 100  
+  - Kullanım senaryosunun sonunda decimal 63  
+- Bu byte **Battery Level (%)** olarak işaretlendi.  
+
+#### 🔹 Excel Formülü ve Görsel
+
+- Tüm paketlerde 4. byte üzerinden **Battery Level** hesaplayan sütun eklendi.  
+- Zaman ekseninde grafiği çizildi:
+
+<img src="ASSETS/battery_level_graph.png" alt="Battery Level Over Time" width="800">
+
+<img src="ASSETS/battery_level_table.png" alt="" width="400"> <img src="ASSETS/battery_level_table2.png" alt="" width="400">
+
+### 🔹 Charger Status Alanı Tespiti
+
+Batarya tarafında alınması gereken bir diğer veri **şarj aleti takılma durumu**dur.  
+- Süpürge ekranında anlık olarak gösterildiği için bataryadan gelen paketlerde bu bilgiyi içeren bir alan olmalıydı.  
+- Kullanım senaryosunda şarj aleti takma/çıkarma anlarına karşılık gelen **byte ve bit** arandı:  
+  - Kaynak ID: **0x45**  
+  - Byte: **3. byte**  
+  - Bit: **3. bit** (bit pozisyonları 0’dan başlıyor kabul edilmiştir)  
+
+Bu bitin durumu **1 → şarj aleti takılı**, **0 → şarj aleti çıkarıldı** olarak değerlendirildi.  
+
+- Excel tablosuna yeni bir sütun eklenerek tüm paketler için bu bitin durumu hesaplandı.  
+- Sonuçlar kullanım senaryosundaki olaylarla birebir uyumlu çıktı.  
+
+#### 🔖 Charger Status Görseli
+
+<img src="ASSETS/charger_status.png" alt="Charger Status Column in Excel" width="600">
+
+### 🔹 Güç Modu ve Motor Gücü Alanı Analizi
+
+Kullanım senaryosunda süpürge, kasıtlı olarak **güç modları arasında geçişler** yaptı, durdurulup tekrar çalıştırıldı ve bazı anlarda tıkama ile kısa süreli zorlandı.  
+Amaç: protokoldeki aynı ana denk gelen paketlerdeki değişimleri analiz etmek.
+
+- Süpürge **3 güç kademesi** içeriyor: düşük → orta → yüksek  
+- Mod değişimlerinde **motor devri, motor voltajı ve akım**da değişim bekleniyor  
+
+#### 0x45 Kaynak ID’li Paket
+
+- Bu pakette **temsil edilemeyen 2 byte** kaldı, bu değerlerin BMS hata/durum bayrakları olduğu varsayıldı şuan batarya sağlam olup bu durumlar oluşturlamayacağı için mevcut analiz kapsamında pas geçildi.
+
+#### 0x42 Kaynak ID’li Paket
+
+- Henüz keşfedilmeyi bekleyen **5 byte’lık payload alanı** mevcut  
+- Analiz için **3. ve 4. byte concat edilerek 16-bit sayısal değer** hesaplandı  
+- Tüm 0x42 paketleri filtrelendi ve Excel tablosuna eklenerek çizgi grafiği oluşturuldu  
+
+#### 🔎 Sonuç
+
+- Grafikte yaklaşık **45. saniyede 500 değerine ulaşan pikler** gözlendi  
+- Öncesi ve sonrası, süpürge çalıştırma/durdurma ve tıkama/anındaki dalgalanmalarla uyumlu  
+- Cihazın speklerinden süpürgenin **500W güçte** olduğu biliniyor  
+- Tüm bu bulgular, söz konusu **16-bit alanın Watt cinsinden güç tüketimi** bilgisini temsil ettiğini %99 ihtimalle doğruluyor  
+
+### 🔖 Power Consumption Grafiği
+
+<img src="ASSETS/power.png" alt="Power Consumption Table" width="600"> c<img src="ASSETS/wattage.png" alt="Power Consumption Graph" width="600">
+
+### 🔧 Akım (Current) Alanının Tespiti
+
+- 0x42 kaynak ID’li paketlerdeki 5. ve 6. byte’lar concat edilerek 16-bit’lik bir sütun oluşturuldu.  
+- Bu sütunun çizgi grafiği çıkarıldı ve analiz edildi.
+
+Grafiğe bakıldığında:  
+
+- Tıkama anında bariz pikler gözlemlendi
+- Bir elektrik motorunun davranışına göre mantıklı: motor zorlandığında çektiği akım artar.  
+- Bu durum grafikte açıkça gözleniyor.  
+- Değerler cihazın nominal gücüyle kıyaslandığında biraz düşük görünüyor, bu nedenle birim kesin değil; muhtemelen raw ADC değeri veya motor tahmin ettiğimden daha yüksek gerilimle çalışıyor bu durumda Amper birimi mantıklı olabilir.  
+- Tıkama ve mod geçişleri sırasında paternler uygun → bu alanın **akım (current)** verisi olduğuna karar verildi.
+
+### 🔖 Current Grafiği
+
+<img src="ASSETS/current_table.png" alt="Current Table" width="600"> c<img src="ASSETS/current.png" alt="Current Graph" width="600">
+
+### 🔌 Voltaj (Voltage) Türetimi ve Akım Alanının Doğrulanması
+
+Akım ve güç verilerini daha iyi anlamak ve akım alanındaki tespitimizi desteklemek için:
+
+- Türetilmiş bir **voltaj sütunu** oluşturuldu:  
+  - Formül: \( P = V x I \)  
+  - Güç sütunları, akım (varsayılan) sütunlarına bölünerek hesaplandı.
+- Oluşturulan voltaj sütununun çizgi grafiği çıkarıldı.
+
+Grafik analizinde:
+
+- **Tıkama anında voltaj düşümleri** gözlemlendi → elektrik motorlarının yük altında voltaj düşmesi beklenen bir davranış.
+- **Motorun sıfır hızdan kalkış anlarında voltaj peakleri** mantıklı ve elektrik motorlarının karakteristiği ile uyumlu.
+- Bu gözlemler, daha önce belirlenen **akım ve güç alanlarının kendi içinde tutarlı olduğunu** destekliyor.
+- Sonuç: Akım alanı tespitinde güven biraz daha arttı.
+
+<img src="ASSETS/calculated_voltage.png" alt="Voltage Table" width="600"> c<img src="ASSETS/derivative_voltage.png" alt="Voltage Graph" width="600">
+
+### 🔹 Motor Aktif/Deaktif Durumu (Motor Status)
+
+0x42 kaynak ID'li paket üzerinde **yalnızca 7. byte** tespit edilememişti.  
+
+- Bu byte incelendiğinde:
+  - Motor çalışırken → 1  
+  - Motor dururken → 0  
+
+- Gözlemlerde bu davranış tüm kullanım senaryosu boyunca tutarlıydı.  
+- Bu nedenle, **grafik oluşturmaya gerek kalmadan** bu byte doğrudan **Motor Aktif/Deaktif (Motor Status)** olarak işaretlendi.
+
+
