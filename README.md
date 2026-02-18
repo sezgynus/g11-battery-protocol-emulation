@@ -266,3 +266,81 @@ Karşılık gelen batarya → süpürge paketi:
 Önce süpürgeden gelen pakette, ardından bataryadan gelen pakette bu değerlerin karşılıklı olarak eşleştiği gözlemlenmiştir.  
 
 Bu korelasyon, **master/slave ve adresleme mekanizması** hakkında ilk ipuçlarını vermektedir.
+
+### ✅ Checksum / Veri Bütünlüğü Doğrulama
+
+İstisnasız her pakette geçerli olan **source/target ID korelasyonu** sayesinde
+çözümlenmesi gereken **son 2 byte alanı** daha anlamlı hale gelmiştir.  
+
+Çoğu seri haberleşme protokolünde olduğu gibi, G11 batarya protokolünde de
+**checksum veya CRC benzeri bir veri bütünlüğü doğrulama alanı** vardır.
+
+#### 🔹 İlk Varsayım
+
+- Her paketin **son 2 byte’ı** checksum alanı olarak kabul edildi  
+- Paket başı ve paket sonu condition’ları bu hesaba dahil edilmedi  
+- Paket boyutu değişken olsa bile bu varsayım uygulanabilir
+
+#### 🔹 Doğrulama
+
+- Seçilen örnek paketler üzerinde **checksum hesaplaması** yapıldı  
+- Hesaplama yöntemi:  checksum = SUM(paket başı/sonu durumları ve checksum alanı hariç tüm byte'lar)
+- Tüm test edilen paketlerde hesaplanan checksum ile paket içindeki son 2 byte **tam olarak eşleşti**  
+
+#### 📊 Örnek Paket ve Checksum
+
+| Paket (süpürge → batarya) | Byte 0 | Byte 1 | … | Byte n-2(Checksum_L) | Byte n-1(Checksum_H) | Byte n |
+|----------------------------|--------|--------|---|----------|----------|--------|
+| Örnek 1                   | 0xFB   | 0x41   | … | 0x9A     | 0x00     | 0xFC   |
+
+Hesaplanan Checksum        0x41+0x45+0x0B+0x09=0x009A
+
+> Son 2 byte paket içindeki checksum ile tam olarak eşleşmektedir.
+
+### 📊 Tüm Paketler Üzerinde Checksum Doğrulama
+
+Tek paket üzerinden yapılan denemeler yeterli kanıt sağlamadığından,
+checksum doğrulamasını **tüm veri setine** uyguladım:
+
+- Excel tablosunda, paket başı ve paket sonu condition’ları dikkate alınmadan
+  her paketin son 2 byte’ının checksum olduğu varsayıldı  
+- Paket içerisindeki **checksum alanı** ile **hesaplanan checksum** karşılaştırıldı  
+- Bu karşılaştırmayı otomatik yapan **formüllü bir sütun** oluşturuldu
+
+#### 🔹 Sonuç
+
+- Toplam ~6500 paket üzerinde doğrulama yapıldı  
+- Tek bir paket bile formül doğrulamasını ihlal etmedi  
+
+> Bu sayede, checksum alanı kesin olarak doğrulanmış oldu.
+
+#### 🧮 Checksum Hesaplama
+
+Aşağıdaki formül, paket tipine göre hangi byte’ların checksum’a dahil edileceğini belirler ve checksum'u hesaplar:
+
+```
+=EĞER([@1]=41;
+    DEC2HEX(TOPLA(HEX2DEC([@1]);HEX2DEC([@2]);HEX2DEC([@3]);HEX2DEC([@4]);HEX2DEC([@5]);HEX2DEC([@6]);HEX2DEC([@7]);HEX2DEC([@8]);HEX2DEC([@9]);HEX2DEC([@10]));4);
+EĞER([@1]=45;
+    DEC2HEX(TOPLA(HEX2DEC([@1]);HEX2DEC([@2]);HEX2DEC([@3]);HEX2DEC([@4]);HEX2DEC([@5]);HEX2DEC([@6]));4);
+EĞER([@1]=42;
+    DEC2HEX(TOPLA(HEX2DEC([@1]);HEX2DEC([@2]);HEX2DEC([@3]);HEX2DEC([@4]);HEX2DEC([@5]);HEX2DEC([@6]);HEX2DEC([@7]));4)
+)))
+```
+Checksum OK? Sutünündaki bu formülde hesaplanan checksum ile checksum alanındaki değerin eşit olup olmama duruma göre OK veya ERRROR döndürür
+
+```
+=EĞER([@Checksum]=
+EĞER([@1]=41;
+  DEC2HEX(BİTVEYA(BİTSOLAKAYDIR(HEX2DEC([@12]);8);HEX2DEC([@11]));4);
+EĞER([@1]=45;
+  DEC2HEX(BİTVEYA(BİTSOLAKAYDIR(HEX2DEC([@8]);8);HEX2DEC([@7]));4);
+EĞER([@1]=42;
+  DEC2HEX(BİTVEYA(BİTSOLAKAYDIR(HEX2DEC([@9]);8);HEX2DEC([@8]));4);0
+)));"OK";"ERROR")
+```
+
+#### 📷 Excel Checksum Alanı Doğrulama Görseli
+
+<img src="ASSETS/excel_checksum_validation.png" alt="Excel Checksum Validation" width="800">
+
