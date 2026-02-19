@@ -36,7 +36,8 @@ This project followed a deterministic engineering methodology:
 
 ---
 
-# 1️⃣ Interface Characterization
+<details>
+<summary><strong>1️⃣ Interface Characterization</strong></summary>
 
 The analysis was performed without opening either the battery pack or the vacuum body.  
 Therefore, connector pin functions were identified using indirect and non-invasive methods.
@@ -133,7 +134,10 @@ A proper level shifting solution is required for the next phase.
 
 ---
 
-# 2️⃣ Data Acquisition and Protocol Discovery Attempts
+</details>
+
+<details>
+<summary><strong>2️⃣ Data Acquisition and Protocol Discovery Attempts</strong></summary>
 
 ### 🔹 Level Shifter Images
 
@@ -322,7 +326,10 @@ Result: **Checksum field definitively confirmed.**
 
 ---
 
-# 3️⃣ Field Identification (Payload Analysis)
+</details>
+
+<details>
+<summary><strong>3️⃣ Field Identification (Payload Analysis)</strong></summary>
 
 To identify payload fields, a structured **4-minute usage scenario** was recorded and timestamped.
 
@@ -335,7 +342,7 @@ To identify payload fields, a structured **4-minute usage scenario** was recorde
 
 (Events fully correlated with packet timeline.)
 
----
+
 
 ## 📊 Battery Level Identification
 
@@ -516,7 +523,10 @@ The extracted data is sufficient to emulate the battery and operate the vacuum w
 
 ---
 
-# 4️⃣ Protocol Emulation
+</details>
+
+<details>
+<summary><strong>4️⃣ Protocol Emulation</strong></summary>
 
 The protocol was emulated using an **ESP32** microcontroller.
 
@@ -549,7 +559,11 @@ When integrated with a proper BMS circuit, full battery emulation becomes possib
 
 ---
 
-# 5️⃣ Hardware Interface Design
+</details>
+
+<details>
+<summary><strong>5️⃣ Hardware Interface Design</strong></summary>
+
 
 UI lines cannot be directly tied to 24V, as the vacuum enables them only after KEY trigger and timeout logic.
 
@@ -574,7 +588,11 @@ Full schematic and PCB project available in the repository.
 
 ---
 
-# 🎁 Bonus: 3D Battery Case Design
+</details>
+
+<details>
+<summary><strong>🎁 Bonus: 3D Battery Case Design</strong></summary>
+
 
 <img src="ASSETS/case1.png" alt="" width="400"> <img src="ASSETS/case2.png" alt="" width="400">
 
