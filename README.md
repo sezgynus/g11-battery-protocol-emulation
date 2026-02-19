@@ -638,3 +638,12 @@ Communication interface’in testlerini yapıp doğruladıktan sonra, uygulama k
 
 ![Battery Level Test GIF](ASSETS/VID_20240125_152934-ezgif.com-video-to-gif-converter.gif)
 
+
+İkinci aşama olarak, daha önce tanımlanan **ADC girişi (GPIO33)** üzerinden bağlanan potansiyometre ile **Battery Level** ve **dijital giriş (GPIO26)** üzerinden **Charger Status** alanları manipüle edilmiştir. Bu sayede batarya durumu pot ile kontrol edilirken, şarj aleti durumu dijital giriş ile değiştirilmiştir. Yapılan testler de başarılı sonuç vermiştir.  
+
+
+<img src="ASSETS/pot_test.gif" alt="" width="400"> <img src="ASSETS/charger.gif" alt="" width="400">
+
+
+Süpürgeden gelen veriler hali hazırda alınabildiği için, yazılım geliştirme açısından yeterli altyapıyı sağladığımı düşündüğümden yazılımı bu seviyede bırakıyorum.  
+Gerekli **BMS devresi** ve diğer çevre birimler eklendiğinde, orijinal bataryayı tam anlamıyla taklit edebilecek bir emülasyon altyapısı sağlanmış olacaktır.
