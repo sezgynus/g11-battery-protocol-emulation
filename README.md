@@ -633,3 +633,8 @@ Testler için:
 Bu yapı sayesinde uygulama katmanında yalnızca **communication interface**’i başlatmak ve **data buffer**’daki ilgili byte’ları okumak veya yazmak yeterlidir.  
 
 Firmware'e erişim için [buraya tıklayabilirsiniz](SOFTWARE/G11_Battery_Controller).
+
+Communication interface’in testlerini yapıp doğruladıktan sonra, uygulama katmanında ilk olarak **Battery Level** alanını sürekli olarak artıran ve 100’ü geçtiğinde tekrar 0’a döndüren bir test yazılmıştır. Bu test ile emülasyon denemelerine başlanmıştır ve **ilk denemede protokol başarıyla taklit edilmiştir**.  
+
+![Battery Level Test GIF](ASSETS/VID_20240125_152934-ezgif.com-video-to-gif-converter.gif)
+
