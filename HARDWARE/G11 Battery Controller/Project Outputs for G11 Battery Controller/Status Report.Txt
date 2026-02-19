@@ -1,0 +1,10 @@
+Output: Bill of Materials
+Type  : BOM
+From  : Variant [[No Variations]] of BOM Document [G11 Battery Controller.BomDoc]
+   Generated File[Bill of Materials-G11 Battery Controller.xlsx]
+
+
+Files Generated   : 1
+Documents Printed : 0
+
+Finished Output Generation At 16:37:49 On 20.03.2024

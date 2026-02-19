@@ -1,0 +1,8 @@
+Added Pin To Net: NetName=VCC Pin=J1-1
+Added Pin To Net: NetName=VCC Pin=J1-2
+Added Pin To Net: NetName=VCC Pin=J1-3
+Added Pin To Net: NetName=GND Pin=J1-8
+Added Pin To Net: NetName=GND Pin=J1-9
+Added Pin To Net: NetName=GND Pin=J1-10
+Added Member To Class: ClassName=POWER Member=Component C2 100uF/16V
+Added Member To Class: ClassName=MCU Member=Component R1 10k

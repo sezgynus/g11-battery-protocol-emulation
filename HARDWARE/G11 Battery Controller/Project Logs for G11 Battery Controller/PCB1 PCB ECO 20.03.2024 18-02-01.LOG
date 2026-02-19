@@ -1,0 +1,20 @@
+Change Component Designator: OldDesignator=J? NewDesignator=J1
+Change Component Designator: OldDesignator=P? NewDesignator=P1
+Change Net Name : Old Net Name=BOOT_MODE New Net Name=BOOT_MODE_4
+Change Net Name : Old Net Name=COMM_HI New Net Name=COMM_HI_4
+Change Net Name : Old Net Name=KEY New Net Name=KEY_4
+Change Net Name : Old Net Name=P+ New Net Name=P+_4
+Change Net Name : Old Net Name=P- New Net Name=P-_4
+Change Net Name : Old Net Name=RST New Net Name=RST_1
+Change Net Name : Old Net Name=RXD0 New Net Name=RXD0_4
+Change Net Name : Old Net Name=TXD0 New Net Name=TXD0_4
+Change Net Name : Old Net Name=UI+ New Net Name=UI+_4
+Change Net Name : Old Net Name=UI- New Net Name=UI-_4
+Added Pin To Net: NetName=BOOT_MODE_1 Pin=MD1-25
+Added Net: Name=BOOT_MODE_1
+Added Pin To Net: NetName=RST_4 Pin=P1-6
+Added Net: Name=RST_4
+Added Pin To Net: NetName=RXD0 Pin=MD1-34
+Added Net: Name=RXD0
+Added Pin To Net: NetName=TXD0 Pin=MD1-35
+Added Net: Name=TXD0
