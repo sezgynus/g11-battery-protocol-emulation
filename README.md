@@ -673,3 +673,9 @@ Testlerde kullandığım **bidirectional level shifter** yapısı da aynı şeki
 
 Bu düzenlemeler, sadece orijinal bataryanın tüm fonksiyonlarını sağlamış olmakla kalmaz, aynı zamanda **Wi-Fi özelliği kazandırarak** bataryayı ileri IoT özellikli bir cihaza dönüştürür.
 Tüm şematik ve PCB projesine [buradan](HARDWARE/G11%20Battery%20Controller) erişebilirsiniz.
+
+## 🎁 Bonus: Batarya Kasa 3D Tasarımı
+
+<img src="ASSETS/case1.png" alt="" width="400"> <img src="ASSETS/case2.png" alt="" width="400">
+
+Bataryanın fiziksel kutusunun 3D tasarım dosyaları [buraya](3D/g11%20battery%20case) bakabilirsiniz.
