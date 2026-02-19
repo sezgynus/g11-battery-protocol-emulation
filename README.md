@@ -599,3 +599,15 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 | 10   | Checksum_L | Paket checksum |
 | 11   | Checksum_H | Paket checksum |
 | 12   | Packet End | 0xFB |
+
+# 🔹 Anlamlandırılan Byte Oranı (Payload Coverage)
+
+| Paket | Toplam Byte | Analiz Edilen Byte | Coverage |
+|-------|------------|------------------|----------|
+| 0x41  | 14         | 10               | 71%      |
+| 0x45  | 10         | 8                | 80%      |
+| 0x42  | 13         | 11               | 85%      |
+| **Toplam** | 37     | 29               | **~78%** |
+
+> Çözülemeyen byte’lar ya sabit/padding alanlarıdır ya da henüz aktif olmayan protokol field’larıdır.
+> Elde edilen veriler, batarya emulasyonunu yapıp süpürgeyi tüm fonksiyonları ile çalıştırmaya yeterlidir.
