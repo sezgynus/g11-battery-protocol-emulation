@@ -1,3 +1,8 @@
+![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
+![ESP32](https://img.shields.io/badge/platform-ESP32-green)
+![Reverse Engineering](https://img.shields.io/badge/domain-Reverse%20Engineering-orange)
+![Hardware](https://img.shields.io/badge/type-Hardware%20%2B%20Firmware-critical)
+
 # Language Selection
 [English](README-en.md) | [Türkçe](README.md)
 
