@@ -647,3 +647,29 @@ Communication interface’in testlerini yapıp doğruladıktan sonra, uygulama k
 
 Süpürgeden gelen veriler hali hazırda alınabildiği için, yazılım geliştirme açısından yeterli altyapıyı sağladığımı düşündüğümden yazılımı bu seviyede bırakıyorum.  
 Gerekli **BMS devresi** ve diğer çevre birimler eklendiğinde, orijinal bataryayı tam anlamıyla taklit edebilecek bir emülasyon altyapısı sağlanmış olacaktır.
+
+## 5️⃣ Donanım Arayüz Tasarımı
+
+Şimdi yedek batarya üretimi yolundaki bir sonraki aşamaya geçerek donanım tasarımının temellerini atacağız.  
+
+Orijinal batarya daha önce bahsettiğimiz **UI+ / UI- pinlerinde**, normal durumda gerilim sağlamaz. Süpürge **tetik basılıp KEY sinyali gönderildiğinde**, belirli bir timeout süresince **UI beslemesini açar** ve besleme alındığında haberleşmeyi başlatır. Herhangi bir aktivite olmazsa güç tasarrufu için besleme kesilir. Bu nedenle UI hatlarını doğrudan 24V’a bağlayamayız.  
+
+Buna çözüm olarak, **UI hatlarını anahtarlayabileceğimiz bir anahtarlama devresi** kurdum ve ESP32 IO pinlerine bağladım.  
+Ek güvenlik amacıyla **sistem genel gücünü de anahtarlayabilir** yapmak istedim ve bunun için ayrı bir anahtarlama devresi ile MCU beslemesi için bir **DC-DC buck konvertör** kullandım. Bu düzenlemeleri **şematiğin power sayfasında** görebilirsiniz. 
+
+<img src="DOCUMENT/power.png" alt="" width="400"> 
+
+Ayrıca MCU, batarya seviyesini anlık ölçüp süpürgeye bildirmesi gerektiği için **5S seri batarya voltajını 0–3.3V aralığına ölçekleyecek bir gerilim bölücü** ile ADC girişine bağladım. Buradan batarya voltajını ölçebileceğiz.  
+
+<img src="DOCUMENT/mcu.png" alt="" width="400"> 
+
+Testlerde kullandığım **bidirectional level shifter** yapısı da aynı şekilde şematiğe dahil edilmiştir.  
+
+<img src="DOCUMENT/comm.png" alt="" width="400"> 
+
+Şarj aleti bağlantısını tespit etmek için yine bir **gerilim bölücü** ile şarj girişini dijital IO’ya bağladım.  
+
+<img src="DOCUMENT/conn.png" alt="" width="400"> 
+
+Bu düzenlemeler, sadece orijinal bataryanın tüm fonksiyonlarını sağlamış olmakla kalmaz, aynı zamanda **Wi-Fi özelliği kazandırarak** bataryayı ileri IoT özellikli bir cihaza dönüştürür.
+Tüm şematik ve PCB projesine [buradan](HARDWARE/G11%20Battery%20Controller) erişebilirsiniz.
