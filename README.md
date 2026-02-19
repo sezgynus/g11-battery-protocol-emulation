@@ -669,7 +669,7 @@ Testlerde kullandığım **bidirectional level shifter** yapısı da aynı şeki
 
 Şarj aleti bağlantısını tespit etmek için yine bir **gerilim bölücü** ile şarj girişini dijital IO’ya bağladım.  
 
-<img src="DOCUMENT/comm.png" alt="" width="400"> 
+<img src="DOCUMENT/conn.png" alt="" width="400"> 
 
 Bu düzenlemeler, sadece orijinal bataryanın tüm fonksiyonlarını sağlamış olmakla kalmaz, aynı zamanda **Wi-Fi özelliği kazandırarak** bataryayı ileri IoT özellikli bir cihaza dönüştürür.
 Tüm şematik ve PCB projesine [buradan](HARDWARE/G11%20Battery%20Controller) erişebilirsiniz.
