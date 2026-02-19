@@ -26,18 +26,12 @@ Bir sistemi gerçekten anlamanın yolu, onu yeniden inşa edebilmekten geçer.
 
 ---
 
-## 🔬 Çalışma Süreci (Özet)
+## 🔬 Çalışma Süreci
 
 Bu proje aşağıdaki deterministik mühendislik adımlarını takip etmiştir:
 
-1. Arayüz Karakterizasyonu
-2. Veri Yakalama
-3. Alan Tespiti
-4. Protokol Emülasyonu
-5. Donanım Arayüz Tasarımı
----
-
-# 1️⃣ Arayüz Karakterizasyonu
+<details>
+<summary><strong>1️⃣ Arayüz Karakterizasyonu</strong></summary>
 
 Batarya paketi ve süpürge gövdesi açılmadan analiz yapılması hedeflenmiştir.
 Bu nedenle konnektör pin fonksiyonları dolaylı ve non-invasive yöntemlerle
@@ -138,8 +132,9 @@ Bu sayede:
 
 Logic seviyesi 24V olduğu için doğrudan logic analyzer bağlantısı mümkün değildir.
 Bir sonraki aşamada uygun level shifting çözümü gereklidir.
-
-# 2️⃣ Veri Yakalama ve Protokol Keşfi Denemeleri
+</details>
+<details>
+<summary><strong>2️⃣ Veri Yakalama ve Protokol Keşfi Denemeleri</strong></summary>
 
 ### 🔹 Level Shifter Görselleri
 
@@ -358,8 +353,9 @@ EĞER([@1]=42;
 #### 📷 Excel Checksum Alanı Doğrulama Görseli
 
 <img src="ASSETS/excel_checksum_validation.png" alt="Excel Checksum Validation" width="800">
-
-# 3️⃣ Alan Tespiti (Payload Analizi)
+</details>
+<details>
+<summary><strong>3️⃣ Alan Tespiti (Payload Analizi)</strong></summary>
 
 Payload içindeki alanları belirlemek için yaklaşık **4 dakikalık bir kullanım senaryosu** hazırlandı.  
 Senaryoda hangi anda hangi işlemin yapıldığı tabloya döküldü:
@@ -620,7 +616,10 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 > Çözülemeyen byte’lar ya sabit/padding alanlarıdır ya da henüz aktif olmayan protokol field’larıdır.
 > Elde edilen veriler, batarya emulasyonunu yapıp süpürgeyi tüm fonksiyonları ile çalıştırmaya yeterlidir.
 
-## 4️⃣ Protokol Emülasyonu
+</details>
+
+<details>
+<summary><strong>4️⃣ Protokol Emülasyonu</strong></summary>
 
 Protokol emülasyonu aşamasında, mikroişlemci olarak **ESP32** tercih edilmiştir. ESP32, kolay erişilebilirliği, geliştirme ortamının rahatlığı ve entegre Wi-Fi özelliği sayesinde projeyi ileri IoT senaryolarına hazırlamak için ideal bir platform sağlar.  
 
@@ -656,7 +655,10 @@ Communication interface’in testlerini yapıp doğruladıktan sonra, uygulama k
 Süpürgeden gelen veriler hali hazırda alınabildiği için, yazılım geliştirme açısından yeterli altyapıyı sağladığımı düşündüğümden yazılımı bu seviyede bırakıyorum.  
 Gerekli **BMS devresi** ve diğer çevre birimler eklendiğinde, orijinal bataryayı tam anlamıyla taklit edebilecek bir emülasyon altyapısı sağlanmış olacaktır.
 
-## 5️⃣ Donanım Arayüz Tasarımı
+</details>
+
+<details>
+<summary><strong>5️⃣ Donanım Arayüz Tasarımı</strong></summary>
 
 Şimdi yedek batarya üretimi yolundaki bir sonraki aşamaya geçerek donanım tasarımının temellerini atacağız.  
 
@@ -681,9 +683,12 @@ Testlerde kullandığım **bidirectional level shifter** yapısı da aynı şeki
 
 Bu düzenlemeler, sadece orijinal bataryanın tüm fonksiyonlarını sağlamış olmakla kalmaz, aynı zamanda **Wi-Fi özelliği kazandırarak** bataryayı ileri IoT özellikli bir cihaza dönüştürür.
 Tüm şematik ve PCB projesine [buradan](HARDWARE/G11%20Battery%20Controller) erişebilirsiniz.
-
-## 🎁 Bonus: Batarya Kasa 3D Tasarımı
+</details>
+<details>
+<summary><strong>🎁 Bonus: Batarya Kasa 3D Tasarımı</strong></summary>
 
 <img src="ASSETS/case1.png" alt="" width="400"> <img src="ASSETS/case2.png" alt="" width="400">
 
 Bataryanın fiziksel kutusunun 3D tasarım dosyaları [buraya](3D/g11%20battery%20case) bakabilirsiniz.
+
+</details>
