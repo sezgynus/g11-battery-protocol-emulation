@@ -25,9 +25,8 @@ Bu proje aşağıdaki deterministik mühendislik adımlarını takip etmiştir:
 1. Arayüz Karakterizasyonu
 2. Veri Yakalama
 3. Alan Tespiti
-4. Algoritma Doğrulama
-5. Protokol Emülasyonu
-6. Donanım Arayüz Tasarımı
+4. Protokol Emülasyonu
+5. Donanım Arayüz Tasarımı
 ---
 
 # 1️⃣ Arayüz Karakterizasyonu
