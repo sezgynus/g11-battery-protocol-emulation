@@ -1,3 +1,6 @@
+# Language Selection
+[English](README-en.md) | [Türkçe](README.md)
+
 # 🔋 G11 Battery Protocol Emulation
 
 ## 📌 Project Objective
