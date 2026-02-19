@@ -611,3 +611,25 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 
 > Çözülemeyen byte’lar ya sabit/padding alanlarıdır ya da henüz aktif olmayan protokol field’larıdır.
 > Elde edilen veriler, batarya emulasyonunu yapıp süpürgeyi tüm fonksiyonları ile çalıştırmaya yeterlidir.
+
+## 4️⃣ Protokol Emülasyonu
+
+Protokol emülasyonu aşamasında, mikroişlemci olarak **ESP32** tercih edilmiştir. ESP32, kolay erişilebilirliği, geliştirme ortamının rahatlığı ve entegre Wi-Fi özelliği sayesinde projeyi ileri IoT senaryolarına hazırlamak için ideal bir platform sağlar.  
+
+Daha önce lojik analizör bağlantısı için hazırlanan ve kullanılan **logic level shifter**, ESP32’nin UART bağlantısı için tekrar kullanılmıştır. Single-wire UART yapısında hem RX hem de TX aynı hat üzerinden geçtiği için yalnızca **GPIO16** üzerinden bağlantı yeterli olmuştur.  
+
+Yazılım tarafında bir **communication interface class** geliştirilmiştir. Bu class:
+
+- Tek hatlı UART portu dinleme modunda RX, yazma modunda TX yönüne geçirir.
+- Dinleme modundayken master’dan (süpürgeden) gelen her paketteki **Target ID**’ye göre uygun yanıtı **data buffer**’ından alır.
+- TX moduna geçerek protokolü kesintisiz işletir.
+- `begin()` fonksiyonu çağrıldığında kendi **FreeRTOS thread**’ini başlatır ve thread içindeki loop’ta protokol sürekli olarak çalışır.
+
+Testler için:
+
+- **GPIO33** ADC giriş → Batarya voltajı alanı simülasyonu
+- **GPIO26** Dijital giriş → Charger status alanı simülasyonu  
+
+Bu yapı sayesinde uygulama katmanında yalnızca **communication interface**’i başlatmak ve **data buffer**’daki ilgili byte’ları okumak veya yazmak yeterlidir.  
+
+Firmware'e erişim için [buraya tıklayabilirsiniz](SOFTWARE/G11_Battery_Controller).
