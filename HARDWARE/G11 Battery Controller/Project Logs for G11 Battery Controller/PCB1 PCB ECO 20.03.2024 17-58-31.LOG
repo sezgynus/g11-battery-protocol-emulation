@@ -1,0 +1,9 @@
+Change Component Footprint: Designator=P? Old Footprint=61300611121 New Footprint=61300611121
+Change Net Name : Old Net Name=NetMD1_9 New Net Name=BATT_LVL
+Change Net Name : Old Net Name=NetMD1_11 New Net Name=CHG_DET
+Change Net Name : Old Net Name=NetMD1_27 New Net Name=COMM_LO
+Change Net Name : Old Net Name=NetQ1_3 New Net Name=COMM_HI
+Add Net: Net with name "BOOT_MODE" already exists
+Add Net: Net with name "RST" already exists
+Add Net: Net with name "RXD0" already exists
+Add Net: Net with name "TXD0" already exists
