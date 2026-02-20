@@ -189,7 +189,7 @@ parametreleri ile **frameler tam olarak oturdu**.
 
 Capture ve ekran görüntüleri:
 
-[Capture Dosyası (.sal)](DOCUMENT/Session%201.sal)  
+[Capture Dosyası (Session 1.sal)](DOCUMENT/Session%201.sal)  
 
 <img src="ASSETS/Logic_Sesion1.png" alt="Logic Analyzer Capture" width="400"> <img src="ASSETS/valid_uart_configuration.png" alt="Protocol Analyzer Konfigürasyonu" width="400">
 
