@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   sign:
+    if: github.actor == 'sezgynus'
     runs-on: ubuntu-latest
 
     steps:
