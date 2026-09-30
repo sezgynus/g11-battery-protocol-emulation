@@ -313,7 +313,7 @@ checksum verification was applied to the **entire dataset**:
 - Verification was performed on approximately **6500 packets**.
 - Not a single packet violated the formula.
 
-> This definitively verified the checksum field.
+> The checksum field was therefore verified across the entire dataset of approximately 6500 packets.
 
 #### 🧮 Checksum Calculation
 
@@ -395,7 +395,7 @@ The operations performed at each point in time were recorded in a table:
 
 ---
 
-## 📊 Payload Correlation and Battery Level
+## 📊 Payload Correlation and Battery Level\n\n> **Note:** Byte and bit indices in this document are zero-based.
 
 - During the usage scenario, data was captured simultaneously with the **logic analyzer**.
 - Packets were transferred to the Excel table using the previously created formulas and columns.
@@ -404,14 +404,14 @@ The operations performed at each point in time were recorded in a table:
 ### 🔹 Battery Level Field Identification
 
 - Battery-to-vacuum packets (starting with 0xFC and ending with 0xFB) were filtered.
-- The **4th byte** of packets with source ID **0x45** showed a decreasing trend over time:
+- The **Byte 4** field of packets with source ID **0x45** showed a decreasing trend over time:
   - Decimal 100 at the beginning
   - Decimal 63 at the end of the usage scenario
 - This byte was identified as **Battery Level (%)**.
 
 #### 🔹 Excel Formula and Graph
 
-- A column calculating **Battery Level** from the 4th byte was added for all packets.
+- A column calculating **Battery Level** from Byte 4 was added for all packets.
 - The value was plotted over time:
 
 <img src="ASSETS/battery_level_graph.png" alt="Battery Level Over Time" width="800">
@@ -425,8 +425,8 @@ Another piece of information expected from the battery side is the **charger con
 - Since this state is shown instantly on the vacuum display, a field containing this information had to exist in the battery-originated packets.
 - The byte and bit corresponding to charger insertion/removal events in the usage scenario were searched:
   - Source ID: **0x45**
-  - Byte: **3rd byte**
-  - Bit: **3rd bit** (bit positions counted from 0)
+  - Byte: **Byte 3**
+  - Bit: **Bit 3**
 
 The state of this bit was interpreted as:
 
@@ -456,7 +456,7 @@ The purpose was to analyze changes in protocol packets corresponding to those ex
 #### Packet with Source ID 0x42
 
 - There was a **5-byte payload area** still waiting to be decoded.
-- For analysis, the **3rd and 4th bytes were concatenated into a 16-bit numeric value**.
+- For analysis, **Byte 3 and Byte 4 were concatenated into a 16-bit numeric value**.
 - All 0x42 packets were filtered, added to the Excel table, and plotted as a line graph.
 
 #### 🔎 Result
@@ -464,15 +464,15 @@ The purpose was to analyze changes in protocol packets corresponding to those ex
 - Peaks reaching a value of approximately **500 around the 45th second** were observed.
 - The behavior before and after these peaks matched vacuum start/stop operations and fluctuations caused by blocking the airflow.
 - According to the device specifications, the vacuum is rated at **500W**.
-- Taken together, these findings indicate with approximately 99% confidence that this **16-bit field represents power consumption in Watts**.
+- Taken together, these findings strongly support the interpretation that this **16-bit field represents power consumption in watts**.
 
 ### 🔖 Power Consumption Graph
 
-<img src="ASSETS/power.png" alt="Power Consumption Table" width="600"> c<img src="ASSETS/wattage.png" alt="Power Consumption Graph" width="600">
+<img src="ASSETS/power.png" alt="Power Consumption Table" width="600"> <img src="ASSETS/wattage.png" alt="Power Consumption Graph" width="600">
 
 ### 🔧 Current Field Identification
 
-- The 5th and 6th bytes of packets with source ID 0x42 were concatenated into a 16-bit column.
+- Byte 5 and Byte 6 of packets with source ID 0x42 were concatenated into a 16-bit column.
 - A line graph of this column was generated and analyzed.
 
 The graph showed:
@@ -480,19 +480,19 @@ The graph showed:
 - Clear peaks when the vacuum inlet was blocked.
 - This is consistent with electric motor behavior: when the motor is mechanically loaded, its current draw increases.
 - This behavior is clearly visible in the graph.
-- The values appear somewhat low compared with the nominal power of the device, so the unit is not certain; it may be a raw ADC value, or the motor may operate at a higher voltage than initially assumed, in which case an Ampere-based interpretation may be reasonable.
-- The patterns during blocking and mode transitions are consistent → therefore this field was identified as **current data**.
+- The values appear somewhat low compared with the nominal power of the device, so the unit is not certain. The field may contain a raw ADC value. Alternatively, if the motor operates at a higher voltage than initially assumed, interpreting the values in amperes may be reasonable.
+- The patterns observed during blocking and mode transitions are consistent with this interpretation; therefore, the field was treated as **current data**.
 
 ### 🔖 Current Graph
 
-<img src="ASSETS/current_table.png" alt="Current Table" width="600"> c<img src="ASSETS/current.png" alt="Current Graph" width="600">
+<img src="ASSETS/current_table.png" alt="Current Table" width="600"> <img src="ASSETS/current.png" alt="Current Graph" width="600">
 
 ### 🔌 Derived Voltage and Validation of the Current Field
 
 To better understand the current and power data and to support the current-field identification:
 
 - A derived **voltage column** was created:
-  - Formula: \( P = V x I \)
+  - Formula: \( P = V × I \)
   - The power column was divided by the assumed current column.
 - A line graph of the resulting voltage column was generated.
 
@@ -501,13 +501,13 @@ Graph analysis showed:
 - **Voltage drops when the vacuum inlet was blocked** → voltage sag under load is expected behavior for an electric motor system.
 - **Voltage peaks when the motor starts from zero speed** were plausible and consistent with motor-system behavior.
 - These observations support the internal consistency of the previously identified **current and power fields**.
-- Result: confidence in the current-field identification increased further.
+- These results provide additional evidence supporting the current-field interpretation.
 
-<img src="ASSETS/calculated_voltage.png" alt="Voltage Table" width="600"> c<img src="ASSETS/derivative_voltage.png" alt="Voltage Graph" width="600">
+<img src="ASSETS/calculated_voltage.png" alt="Voltage Table" width="600"> <img src="ASSETS/derivative_voltage.png" alt="Voltage Graph" width="600">
 
 ### 🔹 Motor Active/Inactive State (Motor Status)
 
-Only the **7th byte** in the packet with source ID 0x42 remained unidentified at this stage.
+Only **Byte 7** in the packet with source ID 0x42 remained unidentified at this stage.
 
 When this byte was examined:
 
@@ -521,12 +521,12 @@ Therefore, without needing a graph, this byte was directly identified as **Motor
 
 The **only packet type sent by the vacuum**, with source ID 0x41, was analyzed.
 
-- The fields that changed throughout the dataset were bytes 3, 4, 5, and 6.
-- Since the 6th byte could only take the values 0 and 1, it was initially left for later analysis.
+- The fields that changed throughout the dataset were Byte 3, Byte 4, Byte 5, and Byte 6.
+- Since Byte 6 could only take the values 0 and 1, it was initially left for later analysis.
 
-### 🔹 Bytes 3, 4, and 5 – Motor Speed / Commanded Velocity
+### 🔹 Byte 3, Byte 4, and Byte 5 – Motor Speed / Commanded Velocity
 
-- Bytes 3, 4, and 5 were concatenated into a 24-bit value.
+- Byte 3, Byte 4, and Byte 5 were concatenated into a 24-bit value.
 - The graph showed a minimum value of 0 and a maximum value of 128000.
 - The pattern was consistent with the current and power graphs.
 
@@ -535,9 +535,9 @@ The **only packet type sent by the vacuum**, with source ID 0x41, was analyzed.
 
 <img src="ASSETS/motor_speed.png" alt="Motor Commanded Velocity Graph" width="600"> <img src="ASSETS/motor_rpm.png" alt="Motor Commanded Velocity Graph" width="600">
 
-#### 🔹 6th Byte – Mode Flag & Trigger Status
+#### 🔹 Byte 6 – Trigger Status
 
-- The **6th byte** completely represents the **trigger pressed/released state**.  
+- **Byte 6** completely represents the **trigger pressed/released state**.  
   → All changes were verified throughout the 4-minute usage scenario.
 
 No changes were observed in the other bytes during the usage scenario.
@@ -546,7 +546,7 @@ No changes were observed in the other bytes during the usage scenario.
 
 # 📝 Result: Decoded Packets and Fields
 
-## 1️⃣ Packet Sent from Vacuum to Motor (Source ID 0x41)
+## 1️⃣ Packet Sent from Vacuum to Battery (Source ID 0x41)
 
 | Byte | Field | Description |
 |------|------|-------------|
