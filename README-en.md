@@ -6,25 +6,90 @@
 # Language Selection
 [English](README-en.md) | [Türkçe](README.md)
 
-# 🔋 G11 Battery Protocol Emulation
+# G11 Battery Protocol Emulation
 
-## 📌 Project Objective
 
-This project focuses on analyzing the communication protocol between a smart battery and the device using reverse engineering methods and recreating it on an embedded system.
+## Project Overview
 
-Objectives:
+This project reverse engineers the closed communication protocol between the Xiaomi G11 smart battery and the vacuum, decodes the protocol, and implements an ESP32-based emulator.
 
-- Analyze the communication behavior of a closed system
-- Decode the packet structure
-- Understand the validation mechanisms
-- Develop protocol-level emulation using the acquired data
+The objective was not merely to capture traffic, but to characterize the system to a reproducible level: from the physical layer to packet framing, addressing, checksum behavior, and functional payload fields. The resulting protocol implementation was validated with a working ESP32 emulator accepted by the original vacuum electronics.
 
-This work approaches the discussion of planned obsolescence from a technical perspective.
-The way to truly understand a system is to be able to rebuild it.
+### Outcome
 
----
+- The closed battery interface was electrically characterized.
+- The physical layer was identified as **single-wire, half-duplex, inverted UART**.
+- Communication was decoded as **9600 baud, 8N1**.
+- The vacuum was identified as the master/polling side and the battery as the slave/response side.
+- Packet framing, source/target addressing, and the 16-bit additive checksum were decoded.
+- The checksum algorithm was verified across approximately **6500 packets**.
+- Across the three primary packet types, **29 / 37 bytes (~78%)** were characterized.
+- The functional fields required for the demonstrated emulation were identified and an ESP32 protocol emulator was successfully validated.
+- A battery-controller hardware design and physical battery enclosure were produced.
 
-## 🔬 Engineering Process
+## Protocol at a Glance
+
+| Property | Result |
+|---|---|
+| Topology | Single-wire |
+| Duplex | Half-duplex |
+| Encoding | Inverted UART |
+| UART | 9600 baud, 8N1 |
+| Master | Vacuum |
+| Slave | Battery |
+| Bus amplitude | ~24–25 V |
+| Vacuum → Battery | 0xFB → 0xFC |
+| Battery → Vacuum | 0xFC → 0xFB |
+| Data integrity | 16-bit additive checksum |
+| Characterized fields | 29 / 37 bytes (~78%) |
+| Emulation platform | ESP32 |
+
+```text
+Start | Source ID | Target ID | Payload ... | Checksum_L | Checksum_H | End
+```
+
+```text
+checksum = SUM(data bytes) & 0xFFFF
+```
+
+The checksum is the sum of packet bytes excluding the start/end delimiters and checksum field itself, and is carried little-endian as `Checksum_L`, `Checksum_H`.
+
+### Confidence of Identified Fields
+
+| Confidence | Fields |
+|---|---|
+| Verified | Packet framing, source/target ID, checksum, battery level, charger status, trigger status, motor active/inactive status |
+| Strongly supported | Power consumption, commanded motor velocity |
+| Partially characterized | Current field; behavioral correlation is strong but the unit remains uncertain |
+| Unknown | Payload bytes that remained constant during testing or were not required for emulation |
+
+> Payload coverage is a byte-count metric. Despite the unidentified fields, all fields required for the battery emulation demonstrated in this project were identified.
+
+## Reverse Engineering Workflow
+
+```text
+Connector and pin identification
+        ↓
+Electrical characterization
+        ↓
+Safe signal acquisition
+        ↓
+Physical-layer identification
+        ↓
+Packet framing and addressing
+        ↓
+Checksum verification
+        ↓
+Controlled usage scenario
+        ↓
+Payload correlation
+        ↓
+ESP32 protocol emulation
+```
+
+The sections below preserve the measurements, hypotheses, and validation steps used to reach these results.
+
+## Reverse Engineering Methodology
 
 This project followed the deterministic engineering steps below:
 
@@ -34,7 +99,7 @@ This project followed the deterministic engineering steps below:
 The goal was to perform the analysis without opening the battery pack or the vacuum body.
 Therefore, connector pin functions were identified using indirect and non-invasive methods.
 
-## 📷 Reference PCB Images
+## Reference PCB Images
 
 Since the model is relatively new, teardown material is limited.
 
@@ -48,17 +113,17 @@ As a result of research:
 
 📌 Reference Images:
 
-### 🔋 Battery PCB Photo
+### Battery PCB Photo
 
 ![Battery PCB Reference](ASSETS/battery_pcb_reference.jpg)
 
-### 🧹 Vacuum PCB Photo
+### Vacuum PCB Photo
 
 ![Vacuum PCB Reference](ASSETS/vacuum_pcb_reference.png)
 
 ---
 
-## 🧩 Connector Pin Layout
+## Connector Pin Layout
 
 The pin names on the 10-pin connector are:
 
@@ -69,29 +134,29 @@ all pin functions were electrically verified.
 
 ---
 
-## 🔬 Electrical Verification
+## Electrical Verification
 
 The battery and vacuum connectors were exposed using jumper wires,
 and measurements were taken while the device was operating.
 
-### ⚡ Power Lines
+### Power Lines
 
 - P- / P+ → Constant 24–25V DC  
   → Confirmed as the main power rail.
 
-### 🖥 UI Lines
+### UI Lines
 
 - UI- / UI+ → 24–25V only while the display is active  
   → Identified as the display power supply lines.
 
-### 🎯 KEY Line
+### KEY Line
 
 - Trigger pressed → 24–25V  
 - Trigger released → 0V  
 
 → Confirmed as the user input line.
 
-### 📡 S Line
+### S Line
 
 - While the device is running → Periodic square waves with 24–25V amplitude  
 - While the device is off → Constant 0V  
@@ -100,7 +165,7 @@ This behavior strongly indicates that the line is the communication line.
 
 ---
 
-### 🏷 Pin Mapping Labeling
+### Pin Mapping Labeling
 
 To prevent connection errors in later analysis and to ensure measurement repeatability,
 the identified pin mapping was physically labeled on both the battery and vacuum connectors.
@@ -111,13 +176,13 @@ This ensured that:
 - The risk of incorrect connections was minimized.
 - Reference confusion during data acquisition was prevented.
 
-### 🔖 Labeled Connector Images
+### Labeled Connector Images
 
 <img src="ASSETS/battery_connector_labeled.jpg" alt="Battery Connector Labeling" width="500"> <img src="ASSETS/vacuum_connector_labeled.jpg" alt="Vacuum Connector Labeling" width="400">
 
 ---
 
-## 📌 Conclusion
+## Conclusion
 
 - Power lines were isolated.
 - The user input line was verified.
@@ -131,7 +196,7 @@ A suitable level-shifting solution is required for the next stage.
 <details>
 <summary><strong>2️⃣ Data Acquisition and Protocol Discovery Attempts</strong></summary>
 
-### 🔹 Level Shifter Images
+### Level Shifter Images
 
 #### 1. Perfboard Implementation
 <img src="ASSETS/level_shifter_photo1.jpg" alt="" width="300"> <img src="ASSETS/level_shifter_photo2.jpg" alt="" width="300">
@@ -145,7 +210,7 @@ This allowed the line to be monitored safely.
 
 ---
 
-## 🔍 Initial Analysis: 1-Wire Hypothesis
+## Initial Analysis: 1-Wire Hypothesis
 
 Because the communication used a single line, the first assumption was that it used the **1-Wire protocol**.
 
@@ -162,7 +227,7 @@ These observations strengthened the possibility that the line was **not using th
 
 ---
 
-## ⚡ Second Analysis: Half-Duplex Single-Wire UART Hypothesis
+## Second Analysis: Half-Duplex Single-Wire UART Hypothesis
 
 The next hypothesis was that the line might be **half-duplex single-wire UART**.
 
@@ -171,7 +236,7 @@ The next hypothesis was that the line might be **half-duplex single-wire UART**.
 
 ---
 
-## ✅ Solution: Signal Inversion and Correct Parameters
+## Solution: Signal Inversion and Correct Parameters
 
 As a final attempt, the signal was inverted and analyzed using:
 
@@ -189,7 +254,7 @@ Capture file and screenshots:
 
 The byte sequences now began to show **stable and repeating correlations**.
 
-## 🔄 Master/Slave Identification
+## Master/Slave Identification
 
 After the bit frames were captured correctly, it was necessary to determine which side was the master (querying side) and which side was the slave (responding side) for byte-level analysis and packet decoding.
 
@@ -204,14 +269,14 @@ To determine which side was the master:
 2. The vacuum was powered on.
 3. The first communication attempt from each side was monitored separately.
 
-### 📌 Result
+### Result
 
 - **Master / Polling side:** Vacuum
 - **Slave / Responding side:** Battery
 
 This finding provides a solid basis for correctly analyzing the dataset and for the next stage: **field identification**.
 
-## 📦 Packet Start and End Conditions
+## Packet Start and End Conditions
 
 When the byte stream captured by the logic analyzer was examined, a repeating pattern was observed:
 
@@ -227,24 +292,24 @@ These patterns were assumed to represent packet start and end conditions.
 
 ---
 
-## 📝 Exporting to an Excel Table
+## Exporting to an Excel Table
 
 According to these packet start/end conditions, an example communication flow can be separated as:
 
 - Every 0xFB…0xFC packet → Vacuum to battery
 - Every 0xFC…0xFB packet → Battery to vacuum
 
-I separated these packets into rows and transferred them into an **Excel table**.
+These packets were separated into rows and transferred into an **Excel table**.
 Even though the meaning of every byte was not yet known, repeating fields could already be observed.
 
 - **Rows with yellow background** → Packets sent from vacuum to battery
 - **Rows with blue background** → Packets sent from battery to vacuum
 
-### 📊 Example [Excel](DOCUMENT/G11_protocol_analyze.xlsx) View
+### Example [Excel](DOCUMENT/G11_protocol_analyze.xlsx) View
 
 <img src="ASSETS/example_packet_table.png" alt="Excel Packet Table Example" width="800">
 
-## 🔗 Intra-Packet Correlation and Initial Byte Analysis
+## Intra-Packet Correlation and Initial Byte Analysis
 
 When the Excel table was examined carefully, several meaningful correlations emerged.
 
@@ -260,7 +325,7 @@ Corresponding battery → vacuum packet:
 |--------|-----|-----|----|----|----|----|----|----|----|----|----|----|----|----|
 | Packet | FC  | 45  | 41 | 44 | 64 | 64 | 00 | 92 | 01 | FB |    |    |    |    |
 
-### 📌 First Correlation Finding
+### First Correlation Finding
 
 - **Byte 1 (0x41)** → Source ID
 - **Byte 2 (0x45)** → Destination ID
@@ -269,7 +334,7 @@ These values were observed to swap correspondingly between the packet sent by th
 
 This correlation provided the first clues about the **master/slave and addressing mechanism**.
 
-### ✅ Checksum / Data Integrity Verification
+### Checksum / Data Integrity Verification
 
 Because the **source/destination ID correlation** was valid without exception across the packets,
 the remaining **last two bytes** became more meaningful.
@@ -277,19 +342,19 @@ the remaining **last two bytes** became more meaningful.
 As in many serial communication protocols, the G11 battery protocol contains a
 **checksum or CRC-like data-integrity verification field**.
 
-#### 🔹 Initial Assumption
+#### Initial Assumption
 
 - The **last two bytes** of each packet were assumed to be the checksum field.
 - Packet start and packet end conditions were excluded from the calculation.
 - The assumption could be applied even when packet length varied.
 
-#### 🔹 Verification
+#### Verification
 
 - Checksum calculations were performed on selected sample packets.
 - Calculation method: checksum = SUM(all bytes except packet start/end conditions and checksum bytes)
 - In all tested packets, the calculated checksum **exactly matched** the last two bytes in the packet.
 
-#### 📊 Example Packet and Checksum
+#### Example Packet and Checksum
 
 | Packet (vacuum → battery) | Byte 0 | Byte 1 | … | Byte n-2 (Checksum_L) | Byte n-1 (Checksum_H) | Byte n |
 |----------------------------|--------|--------|---|----------|----------|--------|
@@ -299,7 +364,7 @@ Calculated Checksum: 0x41 + 0x45 + 0x0B + 0x09 = 0x009A
 
 > The last two bytes exactly match the checksum contained in the packet.
 
-### 📊 Checksum Verification Across All Packets
+### Checksum Verification Across All Packets
 
 Since testing a single packet would not provide sufficient evidence,
 checksum verification was applied to the **entire dataset**:
@@ -308,14 +373,14 @@ checksum verification was applied to the **entire dataset**:
 - The **checksum field contained in the packet** was compared with the **calculated checksum**.
 - A formula-based column was created to automate this comparison.
 
-#### 🔹 Result
+#### Result
 
 - Verification was performed on approximately **6500 packets**.
 - Not a single packet violated the formula.
 
 > The checksum field was therefore verified across the entire dataset of approximately 6500 packets.
 
-#### 🧮 Checksum Calculation
+#### Checksum Calculation
 
 The formula below determines which bytes are included in the checksum according to the packet type and calculates the checksum:
 
@@ -342,7 +407,7 @@ IF([@1]=42,
 ))),"OK","ERROR")
 ```
 
-#### 📷 Excel Checksum Field Verification
+#### Excel Checksum Field Verification
 
 <img src="ASSETS/excel_checksum_validation.png" alt="Excel Checksum Validation" width="800">
 </details>
@@ -395,7 +460,7 @@ The operations performed at each point in time were recorded in a table:
 
 ---
 
-## 📊 Payload Correlation and Battery Level
+## Payload Correlation and Battery Level
 
 > **Note:** Byte and bit indices in this document are zero-based.
 
@@ -403,7 +468,7 @@ The operations performed at each point in time were recorded in a table:
 - Packets were transferred to the Excel table using the previously created formulas and columns.
 - The vacuum display shows the **battery charge level** in real time, so it was assumed that packets coming from the battery must contain a **Battery Level** field.
 
-### 🔹 Battery Level Field Identification
+### Battery Level Field Identification
 
 - Battery-to-vacuum packets (starting with 0xFC and ending with 0xFB) were filtered.
 - The **Byte 4** field of packets with source ID **0x45** showed a decreasing trend over time:
@@ -411,7 +476,7 @@ The operations performed at each point in time were recorded in a table:
   - Decimal 63 at the end of the usage scenario
 - This byte was identified as **Battery Level (%)**.
 
-#### 🔹 Excel Formula and Graph
+#### Excel Formula and Graph
 
 - A column calculating **Battery Level** from Byte 4 was added for all packets.
 - The value was plotted over time:
@@ -420,7 +485,7 @@ The operations performed at each point in time were recorded in a table:
 
 <img src="ASSETS/battery_level_table.png" alt="" width="400"> <img src="ASSETS/battery_level_table2.png" alt="" width="400">
 
-### 🔹 Charger Status Field Identification
+### Charger Status Field Identification
 
 Another piece of information expected from the battery side is the **charger connection status**.
 
@@ -438,11 +503,11 @@ The state of this bit was interpreted as:
 A new column was added to the Excel table to calculate this bit for all packets.
 The results matched the events in the usage scenario exactly.
 
-#### 🔖 Charger Status Image
+#### Charger Status Image
 
 <img src="ASSETS/charger_status.png" alt="Charger Status Column in Excel" width="600">
 
-### 🔹 Power Mode and Motor Power Field Analysis
+### Power Mode and Motor Power Field Analysis
 
 During the usage scenario, the vacuum was intentionally switched between **power modes**, stopped and restarted, and briefly loaded by blocking the airflow.
 The purpose was to analyze changes in protocol packets corresponding to those exact moments.
@@ -461,18 +526,18 @@ The purpose was to analyze changes in protocol packets corresponding to those ex
 - For analysis, **Byte 3 and Byte 4 were concatenated into a 16-bit numeric value**.
 - All 0x42 packets were filtered, added to the Excel table, and plotted as a line graph.
 
-#### 🔎 Result
+#### Result
 
 - Peaks reaching a value of approximately **500 around the 45th second** were observed.
 - The behavior before and after these peaks matched vacuum start/stop operations and fluctuations caused by blocking the airflow.
 - According to the device specifications, the vacuum is rated at **500 W**.
 - Taken together, these findings strongly support the interpretation that this **16-bit field represents power consumption in watts**.
 
-### 🔖 Power Consumption Graph
+### Power Consumption Graph
 
 <img src="ASSETS/power.png" alt="Power Consumption Table" width="600"> <img src="ASSETS/wattage.png" alt="Power Consumption Graph" width="600">
 
-### 🔧 Current Field Identification
+### Current Field Identification
 
 - Byte 5 and Byte 6 of packets with source ID 0x42 were concatenated into a 16-bit column.
 - A line graph of this column was generated and analyzed.
@@ -485,11 +550,11 @@ The graph showed:
 - The values appear somewhat low compared with the nominal power of the device, so the unit is not certain. The field may contain a raw ADC value. Alternatively, if the motor operates at a higher voltage than initially assumed, interpreting the values in amperes may be reasonable.
 - The patterns observed during blocking and mode transitions are consistent with this interpretation; therefore, the field was treated as **current data**.
 
-### 🔖 Current Graph
+### Current Graph
 
 <img src="ASSETS/current_table.png" alt="Current Table" width="600"> <img src="ASSETS/current.png" alt="Current Graph" width="600">
 
-### 🔌 Derived Voltage and Validation of the Current Field
+### Derived Voltage and Validation of the Current Field
 
 To better understand the current and power data and to support the current-field identification:
 
@@ -507,7 +572,7 @@ Graph analysis showed:
 
 <img src="ASSETS/calculated_voltage.png" alt="Voltage Table" width="600"> <img src="ASSETS/derivative_voltage.png" alt="Voltage Graph" width="600">
 
-### 🔹 Motor Active/Inactive State (Motor Status)
+### Motor Active/Inactive State (Motor Status)
 
 Only **Byte 7** in the packet with source ID 0x42 remained unidentified at this stage.
 
@@ -519,14 +584,14 @@ When this byte was examined:
 This behavior was consistent throughout the entire usage scenario.
 Therefore, without needing a graph, this byte was directly identified as **Motor Active/Inactive (Motor Status)**.
 
-## 🔹 Vacuum Packets: Source ID 0x41
+## Vacuum Packets: Source ID 0x41
 
 The **only packet type sent by the vacuum**, with source ID 0x41, was analyzed.
 
 - The fields that changed throughout the dataset were Byte 3, Byte 4, Byte 5, and Byte 6.
 - Since Byte 6 could only take the values 0 and 1, it was initially left for later analysis.
 
-### 🔹 Byte 3, Byte 4, and Byte 5 – Motor Speed / Commanded Velocity
+### Byte 3, Byte 4, and Byte 5 – Motor Speed / Commanded Velocity
 
 - Byte 3, Byte 4, and Byte 5 were concatenated into a 24-bit value.
 - The graph showed a minimum value of 0 and a maximum value of 128000.
@@ -537,7 +602,7 @@ The **only packet type sent by the vacuum**, with source ID 0x41, was analyzed.
 
 <img src="ASSETS/motor_speed.png" alt="Motor Commanded Velocity Graph" width="600"> <img src="ASSETS/motor_rpm.png" alt="Motor Commanded Velocity Graph" width="600">
 
-#### 🔹 Byte 6 – Trigger Status
+#### Byte 6 – Trigger Status
 
 - **Byte 6** completely represents the **trigger pressed/released state**.  
   → All changes were verified throughout the 4-minute usage scenario.
@@ -546,9 +611,15 @@ No changes were observed in the other bytes during the usage scenario.
 
 ---
 
-# 📝 Result: Decoded Packets and Fields
+</details>
 
-## 1️⃣ Packet Sent from Vacuum to Battery (Source ID 0x41)
+## Protocol Reference
+
+This section consolidates the packet definitions obtained at the end of the reverse-engineering process. Byte and bit indices are zero-based.
+
+### Result: Decoded Packets and Fields
+
+#### 1️⃣ Packet Sent from Vacuum to Battery (Source ID 0x41)
 
 | Byte | Field | Description |
 |------|------|-------------|
@@ -569,7 +640,7 @@ No changes were observed in the other bytes during the usage scenario.
 
 ---
 
-## 2️⃣ Packet Sent from Battery to Vacuum (Source ID 0x45)
+#### 2️⃣ Packet Sent from Battery to Vacuum (Source ID 0x45)
 
 | Byte | Field | Description |
 |------|------|-------------|
@@ -586,7 +657,7 @@ No changes were observed in the other bytes during the usage scenario.
 
 ---
 
-## 3️⃣ Packet Sent from Battery to Vacuum (Source ID 0x42)
+#### 3️⃣ Packet Sent from Battery to Vacuum (Source ID 0x42)
 
 | Byte | Field | Description |
 |------|------|-------------|
@@ -604,7 +675,7 @@ No changes were observed in the other bytes during the usage scenario.
 | 11   | Checksum_H | Packet checksum |
 | 12   | Packet End | 0xFB |
 
-# 🔹 Payload Coverage
+### Payload Coverage
 
 | Packet | Total Bytes | Analyzed Bytes | Coverage |
 |--------|-------------|----------------|----------|
@@ -615,8 +686,6 @@ No changes were observed in the other bytes during the usage scenario.
 
 > The undecoded bytes are either constant/padding fields or protocol fields that were not active during the tests.  
 > The extracted data is sufficient to emulate the battery and operate the vacuum with all demonstrated functions.
-
-</details>
 
 <details>
 <summary><strong>4️⃣ Protocol Emulation</strong></summary>
@@ -654,7 +723,7 @@ These tests were also successful.
 
 <img src="ASSETS/pot_test.gif" alt="" width="400"> <img src="ASSETS/charger.gif" alt="" width="400">
 
-Since data coming from the vacuum can already be received, I consider the software infrastructure sufficient for further development and have left the firmware at this stage.
+Since data from the vacuum could already be received, the software infrastructure was considered sufficient for further development and the firmware was left at this stage.
 When the required **BMS circuit** and other peripherals are added, this infrastructure can provide full emulation of the original battery.
 
 </details>
@@ -669,13 +738,13 @@ When the vacuum's **trigger is pressed and the KEY signal is generated**, the va
 If there is no activity, the supply is turned off to save power.
 For this reason, the UI lines cannot simply be connected directly to 24V.
 
-As a solution, I built a **switching circuit for controlling the UI lines** and connected it to the ESP32 I/O pins.
-For additional safety, I also wanted the **entire system power to be switchable**, so I used a separate switching circuit together with a **DC-DC buck converter** for the MCU supply.
+As a solution, a **switching circuit for controlling the UI lines** was implemented and connected to the ESP32 I/O pins.
+For additional safety, the **entire system power was also made switchable** using a separate switching circuit together with a **DC-DC buck converter** for the MCU supply.
 These arrangements can be seen on the **power page of the schematic**.
 
 <img src="DOCUMENT/power.png" alt="" width="400">
 
-In addition, because the MCU must measure the battery level in real time and report it to the vacuum, I connected the **5S series battery voltage to an ADC input through a voltage divider that scales it to the 0–3.3V range**.
+In addition, to allow the MCU to measure the battery level in real time and report it to the vacuum, the **5S series battery voltage was connected to an ADC input through a voltage divider that scales it to the 0–3.3V range**.
 This allows the battery voltage to be measured.
 
 <img src="DOCUMENT/mcu.png" alt="" width="400">
@@ -701,3 +770,25 @@ The complete schematic and PCB project are available [here](HARDWARE/G11%20Batte
 The 3D design files for the physical battery enclosure are available [here](3D/g11%20battery%20case).
 
 </details>
+
+## Repository Structure
+
+| Directory | Contents |
+|---|---|
+| `ASSETS/` | Photos, graphs, test images, and GIFs |
+| `DOCUMENT/` | Logic-analyzer captures, Excel protocol analysis, and schematic images |
+| `SOFTWARE/` | ESP32 protocol emulator |
+| `HARDWARE/` | Battery-controller schematic and PCB project |
+| `3D/` | Battery enclosure design files |
+
+## Project Status
+
+This is a **completed reverse-engineering and proof-of-concept emulation project**.
+
+- Reverse engineering: **Completed**
+- Protocol emulation: **Completed**
+- Hardware design: **Completed**
+- Firmware proof of concept: **Completed**
+- Further protocol analysis: **Not planned**
+
+Some payload bytes remain unidentified because they did not change during the available tests or were not required for the demonstrated emulation. The functional emulation targeted by this project was validated with the available data and implementation.

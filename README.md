@@ -6,27 +6,90 @@
 # Language Selection
 [English](README-en.md) | [Türkçe](README.md)
 
-# 🔋 G11 Battery Protocol Emulation
+# G11 Battery Protocol Emulation
 
-## 📌 Projenin Amacı
 
-Bu proje, akıllı bir batarya ile cihaz arasındaki haberleşme protokolünün
-tersine mühendislik (reverse engineering) yöntemiyle analiz edilmesi ve gömülü sistem üzerinde
-yeniden modellenmesini konu almaktadır.
+## Projeye Genel Bakış
 
-Amaç:
+Bu proje, Xiaomi G11 akıllı bataryası ile süpürge arasındaki kapalı haberleşme protokolünün tersine mühendislik yöntemiyle analiz edilmesini, protokolün çözümlenmesini ve ESP32 üzerinde emüle edilmesini kapsar.
 
-- Kapalı bir sistemin haberleşme davranışını analiz etmek
-- Paket yapısını çözümlemek
-- Doğrulama mekanizmalarını anlamak
-- Elde edilen verilerle protokol seviyesinde emülasyon geliştirmek
+Amaç yalnızca veri hattını dinlemek değil; fiziksel katmandan paket yapısına, adresleme ve checksum mekanizmasından işlevsel payload alanlarına kadar sistemi yeniden uygulanabilecek seviyede karakterize etmekti. Elde edilen protokol ESP32 üzerinde uygulanmış ve orijinal süpürge elektroniği tarafından kabul edilen çalışan bir emülatör ile doğrulanmıştır.
 
-Bu çalışma, planlı eskitme tartışmalarına teknik bir perspektiften yaklaşır.
-Bir sistemi gerçekten anlamanın yolu, onu yeniden inşa edebilmekten geçer.
+### Sonuç
 
----
+- Kapalı batarya haberleşme arayüzü elektriksel olarak karakterize edildi.
+- Fiziksel katman **single-wire, half-duplex, inverted UART** olarak belirlendi.
+- Haberleşme **9600 baud, 8N1** olarak çözüldü.
+- Süpürgenin master/polling, bataryanın slave/response tarafı olduğu doğrulandı.
+- Paket sınırları, source/target adresleme yapısı ve 16-bit toplamsal checksum çözüldü.
+- Checksum algoritması yaklaşık **6500 paketlik** veri setinin tamamında doğrulandı.
+- Üç temel paket tipinde toplam **29 / 37 byte (~%78)** karakterize edildi.
+- Emülasyon için gerekli işlevsel alanlar belirlendi ve ESP32 tabanlı protokol emülatörü başarıyla çalıştırıldı.
+- Batarya denetleyici donanımı ve fiziksel batarya kutusu tasarlandı.
 
-## 🔬 Çalışma Süreci
+## Protokole Hızlı Bakış
+
+| Özellik | Sonuç |
+|---|---|
+| Topoloji | Single-wire |
+| Duplex | Half-duplex |
+| Kodlama | Inverted UART |
+| UART | 9600 baud, 8N1 |
+| Master | Süpürge |
+| Slave | Batarya |
+| Hat genliği | ~24–25 V |
+| Süpürge → Batarya | 0xFB → 0xFC |
+| Batarya → Süpürge | 0xFC → 0xFB |
+| Veri bütünlüğü | 16-bit toplamsal checksum |
+| Karakterize edilen alan | 29 / 37 byte (~%78) |
+| Emülasyon platformu | ESP32 |
+
+```text
+Start | Source ID | Target ID | Payload ... | Checksum_L | Checksum_H | End
+```
+
+```text
+checksum = SUM(data bytes) & 0xFFFF
+```
+
+Checksum; başlangıç/bitiş byte'ları ve checksum alanının kendisi hariç paket byte'larının toplamıdır ve little-endian olarak `Checksum_L`, `Checksum_H` sırasıyla taşınır.
+
+### Bulguların Güven Düzeyi
+
+| Düzey | Alanlar |
+|---|---|
+| Doğrulanmış | Paket sınırları, source/target ID, checksum, batarya seviyesi, şarj durumu, tetik durumu, motor aktif/deaktif durumu |
+| Güçlü biçimde desteklenen | Güç tüketimi, motor komut hızı |
+| Kısmen karakterize | Akım alanı; davranış korelasyonu güçlü ancak birimi kesin değil |
+| Bilinmeyen | Testlerde değişmeyen veya emülasyon için gerekli olmayan payload byte'ları |
+
+> Payload coverage byte sayısı üzerinden hesaplanmıştır. Bilinmeyen alanlara rağmen, gösterilen batarya emülasyonu için gerekli alanlar belirlenmiştir.
+
+## Tersine Mühendislik Akışı
+
+```text
+Konnektör ve pin tespiti
+        ↓
+Elektriksel karakterizasyon
+        ↓
+Güvenli sinyal yakalama
+        ↓
+Fiziksel katman tespiti
+        ↓
+Paket sınırları ve adresleme
+        ↓
+Checksum doğrulama
+        ↓
+Kontrollü kullanım senaryosu
+        ↓
+Payload korelasyonu
+        ↓
+ESP32 protokol emülasyonu
+```
+
+Aşağıdaki bölümler sonuçlara hangi ölçüm, hipotez ve doğrulama adımlarıyla ulaşıldığını gösterir.
+
+## Reverse Engineering Metodolojisi
 
 Bu proje aşağıdaki deterministik mühendislik adımlarını takip etmiştir:
 
@@ -37,7 +100,7 @@ Batarya paketi ve süpürge gövdesi açılmadan analiz yapılması hedeflenmiş
 Bu nedenle konnektör pin fonksiyonları dolaylı ve müdahalesiz (non-invasive) yöntemlerle
 tespit edilmiştir.
 
-## 📷 Referans PCB Görselleri
+## Referans PCB Görselleri
 
 Model yeni olduğu için teardown materyali sınırlıdır.
 
@@ -53,17 +116,17 @@ ulaşılmıştır.
 
 📌 Referans Görseller:
 
-### 🔋 Batarya PCB fotoğrafı
+### Batarya PCB fotoğrafı
 
 ![Battery PCB Reference](ASSETS/battery_pcb_reference.jpg)
 
-### 🧹 Süpürge PCB fotoğrafı
+### Süpürge PCB fotoğrafı
 
 ![Vacuum PCB Reference](ASSETS/vacuum_pcb_reference.png)
 
 ---
 
-## 🧩 Konnektör Pin Dizilimi
+## Konnektör Pin Dizilimi
 
 10 pinli konnektör üzerinde yer alan pin isimleri:
 
@@ -74,29 +137,29 @@ tüm pin fonksiyonları elektronik olarak doğrulanmıştır.
 
 ---
 
-## 🔬 Elektriksel Doğrulama
+## Elektriksel Doğrulama
 
 Batarya ve süpürge konnektörleri jumper kablolar ile açığa alınmış,
 cihaz çalışırken ölçümler gerçekleştirilmiştir.
 
-### ⚡ Güç Hatları
+### Güç Hatları
 
 - P- / P+ → Sürekli 24–25V DC  
   → Ana güç hattı olarak doğrulanmıştır.
 
-### 🖥 UI Hatları
+### UI Hatları
 
 - UI- / UI+ → Yalnızca ekran aktifken 24–25V  
   → Ekran besleme hattı olarak değerlendirilmiştir.
 
-### 🎯 KEY Hattı
+### KEY Hattı
 
 - Tetik basılı → 24–25V  
 - Tetik bırakıldığında → 0V  
 
 → Kullanıcı giriş hattı doğrulanmıştır.
 
-### 📡 S Hattı
+### S Hattı
 
 - Cihaz çalışırken → 24–25V genliğinde periyodik kare dalgalar  
 - Cihaz kapalıyken → 0V sabit  
@@ -105,7 +168,7 @@ Bu davranış, hattın haberleşme hattı olduğunu güçlü şekilde göstermek
 
 ---
 
-### 🏷 Pin Eşlemesinin Etiketlenmesi
+### Pin Eşlemesinin Etiketlenmesi
 
 Daha sonraki analiz çalışmalarında bağlantı hatalarını önlemek ve ölçüm
 tekrar edilebilirliğini sağlamak amacıyla tespit edilen pin eşlemesi,
@@ -117,13 +180,13 @@ Bu sayede:
 - Yanlış bağlantı riski minimize edilmiştir.
 - Veri yakalama aşamasında referans karışıklığı önlenmiştir.
 
-### 🔖 Etiketlenmiş Konnektör Görselleri
+### Etiketlenmiş Konnektör Görselleri
 
 <img src="ASSETS/battery_connector_labeled.jpg" alt="Battery Connector Labeling" width="500"> <img src="ASSETS/vacuum_connector_labeled.jpg" alt="Vacuum Connector Labeling" width="400">
 
 ---
 
-## 📌 Sonuç
+## Sonuç
 
 - Güç hatları ayrıştırılmıştır.
 - Kullanıcı giriş hattı doğrulanmıştır.
@@ -136,7 +199,7 @@ Bir sonraki aşamada uygun level shifting çözümü gereklidir.
 <details>
 <summary><strong>2️⃣ Veri Yakalama ve Protokol Keşfi Denemeleri</strong></summary>
 
-### 🔹 Seviye Dönüştürücü (Level Shifter) Görselleri
+### Seviye Dönüştürücü (Level Shifter) Görselleri
 
 #### 1. Delikli Pertinaks Üzerinde Yapılmış Devre
 <img src="ASSETS/level_shifter_photo1.jpg" alt="" width="300"> <img src="ASSETS/level_shifter_photo2.jpg" alt="" width="300">
@@ -150,7 +213,7 @@ Hattın güvenli şekilde dinlenmesi sağlanmıştır.
 
 ---
 
-## 🔍 İlk Analiz: 1-Wire Hipotezi
+## İlk Analiz: 1-Wire Hipotezi
 
 Hattın tek hatlı olması nedeniyle ilk olarak **1-Wire protokolü** varsayılmıştır.  
 
@@ -167,7 +230,7 @@ Bu gözlemler, hattın **standart 1-Wire protokolü olmadığı** ihtimalini gü
 
 ---
 
-## ⚡ İkinci Analiz: Half-Duplex Single-Wire UART Hipotezi
+## İkinci Analiz: Half-Duplex Single-Wire UART Hipotezi
 
 Daha sonra hattın **half-duplex single-wire UART** olabileceği üzerine yoğunlaşıldı.  
 
@@ -176,7 +239,7 @@ Daha sonra hattın **half-duplex single-wire UART** olabileceği üzerine yoğun
 
 ---
 
-## ✅ Çözüm: Sinyalin Terslenmesi ve Doğru Parametreler
+## Çözüm: Sinyalin Terslenmesi ve Doğru Parametreler
 
 Son bir deneme olarak sinyal terslenerek analiz edildi ve:
 
@@ -195,7 +258,7 @@ Veri kaydı ve ekran görüntüleri:
 
 Byte dizileri artık **istikrarlı ve tekrar eden korelasyonlar** göstermeye başladı.  
 
-## 🔄 Master/Slave Tespiti
+## Master/Slave Tespiti
 
 Bit çerçeveleri doğru şekilde yakalandıktan sonra, byte seviyesinde analiz ve
 paket çözümlemesi için hangi tarafın master (sorgulayan) ve hangi tarafın
@@ -212,7 +275,7 @@ Hangi tarafın master olduğunu anlamak için:
 2. Süpürge çalıştırıldı  
 3. İlk konuşma denemesi her iki taraftan ayrı ayrı dinlendi  
 
-### 📌 Sonuç
+### Sonuç
 
 - **Master / Polling yapan taraf:** Süpürge  
 - **Slave / Cevap veren taraf:** Batarya
@@ -220,7 +283,7 @@ Hangi tarafın master olduğunu anlamak için:
 Bu tespit, veri setinin doğru şekilde analiz edilmesini ve
 sonraki aşama olan **alan tespiti (field identification)** için sağlam bir temel sağlamıştır.
 
-## 📦 Paket Başlangıç ve Bitiş Koşulları
+## Paket Başlangıç ve Bitiş Koşulları
 
 Lojik analizör ile alınan byte akışı incelendiğinde, tekrarlayan bir örüntü gözlemlenmiştir:
 
@@ -235,24 +298,24 @@ Bu örüntülerin paket başlangıç ve bitiş sınırlarını temsil ettiği va
 
 ---
 
-## 📝 Excel Tablosuna Aktarım
+## Excel Tablosuna Aktarım
 
 Bu paket başlangıç/bitiş koşullarına göre, örnek bir konuşma akışı:
 
 - Her 0xFB…0xFC paketi → Süpürgeden bataryaya  
 - Her 0xFC…0xFB paketi → Bataryadan süpürgeye
 
-Bu paketleri **satırlara ayırarak Excel tablosuna** döktüm.  
+Bu paketler **satırlara ayrılarak Excel tablosuna** aktarıldı.  
 Henüz her byte’ın anlamını bilmiyor olsak da, tekrarlı alanlar gözlemlenebiliyordu.
 
 - **Sarı arka planlı satırlar** → Süpürgeden bataryaya giden paketler  
 - **Mavi arka planlı satırlar** → Bataryadan süpürgeye giden paketler
 
-### 📊 Örnek [Excel](DOCUMENT/G11_protocol_analyze.xlsx) Görseli
+### Örnek [Excel](DOCUMENT/G11_protocol_analyze.xlsx) Görseli
 
 <img src="ASSETS/example_packet_table.png" alt="Excel Paket Tablosu Örneği" width="800">
 
-## 🔗 Paket İçi Korelasyon ve İlk Byte Analizi
+## Paket İçi Korelasyon ve İlk Byte Analizi
 
 Excel tablosunu dikkatle incelediğimizde bazı anlamlı korelasyonlar ortaya çıkmıştır:
 
@@ -268,7 +331,7 @@ Karşılık gelen batarya → süpürge paketi:
 |--------|-----|-----|----|----|----|----|----|----|----|----|----|----|----|----|
 | Paket  | FC  | 45  | 41 | 44 | 64 | 64 | 00 | 92 | 01 | FB |    |    |    |    |
 
-### 📌 İlk Korelasyon Çıkarımı
+### İlk Korelasyon Çıkarımı
 
 - **Byte 1 (0x41)** → Kaynak ID (source ID)  
 - **Byte 2 (0x45)** → Hedef ID (destination ID)  
@@ -277,7 +340,7 @@ Karşılık gelen batarya → süpürge paketi:
 
 Bu korelasyon, **master/slave ve adresleme mekanizması** hakkında ilk ipuçlarını vermektedir.
 
-### ✅ Checksum / Veri Bütünlüğü Doğrulama
+### Checksum / Veri Bütünlüğü Doğrulama
 
 İstisnasız her pakette geçerli olan **source/target ID korelasyonu** sayesinde
 çözümlenmesi gereken **son 2 byte alanı** daha anlamlı hale gelmiştir.  
@@ -285,19 +348,19 @@ Bu korelasyon, **master/slave ve adresleme mekanizması** hakkında ilk ipuçlar
 Çoğu seri haberleşme protokolünde olduğu gibi, G11 batarya protokolünde de
 **checksum veya CRC benzeri bir veri bütünlüğü doğrulama alanı** vardır.
 
-#### 🔹 İlk Varsayım
+#### İlk Varsayım
 
 - Her paketin **son 2 byte’ı** checksum alanı olarak kabul edildi  
 - Paket başlangıç ve bitiş byte'ları bu hesaba dahil edilmedi  
 - Paket boyutu değişken olsa bile bu varsayım uygulanabilir
 
-#### 🔹 Doğrulama
+#### Doğrulama
 
 - Seçilen örnek paketler üzerinde **checksum hesaplaması** yapıldı  
 - Hesaplama yöntemi:  checksum = SUM(paket başlangıç/bitiş byte'ları ve checksum alanı hariç tüm byte'lar)
 - Tüm test edilen paketlerde hesaplanan checksum ile paket içindeki son 2 byte **tam olarak eşleşti**  
 
-#### 📊 Örnek Paket ve Checksum
+#### Örnek Paket ve Checksum
 
 | Paket (süpürge → batarya) | Byte 0 | Byte 1 | … | Byte n-2(Checksum_L) | Byte n-1(Checksum_H) | Byte n |
 |----------------------------|--------|--------|---|----------|----------|--------|
@@ -307,24 +370,24 @@ Hesaplanan Checksum        0x41+0x45+0x0B+0x09=0x009A
 
 > Son 2 byte paket içindeki checksum ile tam olarak eşleşmektedir.
 
-### 📊 Tüm Paketler Üzerinde Checksum Doğrulama
+### Tüm Paketler Üzerinde Checksum Doğrulama
 
 Tek paket üzerinden yapılan denemeler yeterli kanıt sağlamadığından,
-checksum doğrulamasını **tüm veri setine** uyguladım:
+checksum doğrulaması **tüm veri setine** uygulandı:
 
 - Excel tablosunda, paket başlangıç ve bitiş byte'ları dikkate alınmadan
   her paketin son 2 byte’ının checksum olduğu varsayıldı  
 - Paket içerisindeki **checksum alanı** ile **hesaplanan checksum** karşılaştırıldı  
 - Bu karşılaştırmayı otomatik yapan **formüllü bir sütun** oluşturuldu
 
-#### 🔹 Sonuç
+#### Sonuç
 
 - Toplam ~6500 paket üzerinde doğrulama yapıldı  
 - Tek bir paket bile formül doğrulamasını ihlal etmedi  
 
 > Böylece checksum alanı, yaklaşık 6500 paketlik veri setinin tamamında doğrulanmıştır.
 
-#### 🧮 Checksum Hesaplama
+#### Checksum Hesaplama
 
 Aşağıdaki formül, paket tipine göre hangi byte’ların checksum’a dahil edileceğini belirler ve checksum'u hesaplar:
 
@@ -350,7 +413,7 @@ EĞER([@1]=42;
 )));"OK";"ERROR")
 ```
 
-#### 📷 Excel Checksum Alanı Doğrulama Görseli
+#### Excel Checksum Alanı Doğrulama Görseli
 
 <img src="ASSETS/excel_checksum_validation.png" alt="Excel Checksum Validation" width="800">
 </details>
@@ -402,7 +465,7 @@ Senaryoda hangi anda hangi işlemin yapıldığı tabloya döküldü:
 
 ---
 
-## 📊 Payload Korelasyonu ve Batarya Seviyesi
+## Payload Korelasyonu ve Batarya Seviyesi
 
 > **Not:** Bu dokümanda byte ve bit indeksleri 0'dan başlamaktadır.
 
@@ -410,7 +473,7 @@ Senaryoda hangi anda hangi işlemin yapıldığı tabloya döküldü:
 - Excel tablosuna paketler aktarıldı, önceki formüller ve sütunlar kullanıldı.  
 - Süpürgenin ekranında **batarya şarj seviyesi** canlı olarak gösteriliyor, dolayısıyla bataryadan gelen paketlerde bir **Batarya Seviyesi (Battery Level)** alanı olması gerektiği varsayıldı.  
 
-### 🔹 Batarya Seviyesi (Battery Level) Alanının Tespiti
+### Batarya Seviyesi (Battery Level) Alanının Tespiti
 
 - Bataryadan süpürgeye gönderilen paketler (0xFC ile başlar, 0xFB ile biter) filtrelendi.  
 - Kaynak ID’si **0x45** olan paketlerin **Byte 4** zamanla düşen bir eğilim gösterdi:  
@@ -418,7 +481,7 @@ Senaryoda hangi anda hangi işlemin yapıldığı tabloya döküldü:
   - Kullanım senaryosunun sonunda ondalık olarak 63  
 - Bu byte **Batarya Seviyesi (Battery Level, %)** olarak işaretlendi.  
 
-#### 🔹 Excel Formülü ve Görsel
+#### Excel Formülü ve Görsel
 
 - Tüm paketlerde Byte 4 üzerinden **Batarya Seviyesi** hesaplayan bir sütun eklendi.  
 - Zaman ekseninde grafiği çizildi:
@@ -427,7 +490,7 @@ Senaryoda hangi anda hangi işlemin yapıldığı tabloya döküldü:
 
 <img src="ASSETS/battery_level_table.png" alt="" width="400"> <img src="ASSETS/battery_level_table2.png" alt="" width="400">
 
-### 🔹 Şarj Durumu (Charger Status) Alanının Tespiti
+### Şarj Durumu (Charger Status) Alanının Tespiti
 
 Batarya tarafında alınması gereken bir diğer veri **şarj aleti takılma durumu**dur.  
 - Süpürge ekranında anlık olarak gösterildiği için bataryadan gelen paketlerde bu bilgiyi içeren bir alan olmalıydı.  
@@ -441,11 +504,11 @@ Bu bitin durumu **1 → şarj aleti takılı**, **0 → şarj aleti çıkarıld�
 - Excel tablosuna yeni bir sütun eklenerek tüm paketler için bu bitin durumu hesaplandı.  
 - Sonuçlar kullanım senaryosundaki olaylarla birebir uyumlu çıktı.  
 
-#### 🔖 Charger Status Görseli
+#### Charger Status Görseli
 
 <img src="ASSETS/charger_status.png" alt="Charger Status Column in Excel" width="600">
 
-### 🔹 Güç Modu ve Motor Gücü Alanı Analizi
+### Güç Modu ve Motor Gücü Alanı Analizi
 
 Kullanım senaryosunda süpürge, kasıtlı olarak **güç modları arasında geçişler** yaptı, durdurulup tekrar çalıştırıldı ve bazı anlarda tıkama ile kısa süreli zorlandı.  
 Amaç: protokoldeki aynı ana denk gelen paketlerdeki değişimleri analiz etmek.
@@ -463,18 +526,18 @@ Amaç: protokoldeki aynı ana denk gelen paketlerdeki değişimleri analiz etmek
 - Analiz için **Byte 3 ve Byte 4 birleştirilerek 16-bit sayısal bir değer** hesaplandı  
 - Tüm 0x42 paketleri filtrelendi ve Excel tablosuna eklenerek çizgi grafiği oluşturuldu  
 
-#### 🔎 Sonuç
+#### Sonuç
 
 - Grafikte yaklaşık **45. saniyede 500 değerine ulaşan pikler** gözlendi  
 - Öncesi ve sonrası, süpürge çalıştırma/durdurma ve tıkama anındaki dalgalanmalarla uyumlu  
 - Cihazın teknik özelliklerine göre süpürgenin **500 W gücünde** olduğu biliniyor  
 - Tüm bu bulgular, söz konusu **16-bit alanın watt cinsinden güç tüketimini** temsil ettiğini güçlü biçimde desteklemektedir  
 
-### 🔖 Güç Tüketimi Grafiği
+### Güç Tüketimi Grafiği
 
 <img src="ASSETS/power.png" alt="Power Consumption Table" width="600"> <img src="ASSETS/wattage.png" alt="Power Consumption Graph" width="600">
 
-### 🔧 Akım (Current) Alanının Tespiti
+### Akım (Current) Alanının Tespiti
 
 - 0x42 kaynak ID’li paketlerdeki Byte 5 ve Byte 6 birleştirilerek 16-bit’lik bir sütun oluşturuldu.  
 - Bu sütunun çizgi grafiği çıkarıldı ve analiz edildi.
@@ -487,11 +550,11 @@ Grafiğe bakıldığında:
 - Değerler cihazın nominal gücüyle kıyaslandığında biraz düşük görünüyor, bu nedenle birim kesin değil; Bu değer ham bir ADC verisi olabilir. Alternatif olarak motor tahmin edilenden daha yüksek bir gerilimde çalışıyorsa değerlerin amper cinsinden olması mümkün olabilir.  
 - Tıkama ve mod geçişleri sırasında gözlenen örüntüler bu yorumla uyumludur; bu nedenle alan **akım (current)** verisi olarak değerlendirilmiştir.
 
-### 🔖 Akım Grafiği
+### Akım Grafiği
 
 <img src="ASSETS/current_table.png" alt="Current Table" width="600"> <img src="ASSETS/current.png" alt="Current Graph" width="600">
 
-### 🔌 Voltaj (Voltage) Türetimi ve Akım Alanının Doğrulanması
+### Voltaj (Voltage) Türetimi ve Akım Alanının Doğrulanması
 
 Akım ve güç verilerini daha iyi anlamak ve akım alanındaki tespitimizi desteklemek için:
 
@@ -509,7 +572,7 @@ Grafik analizinde:
 
 <img src="ASSETS/calculated_voltage.png" alt="Voltage Table" width="600"> <img src="ASSETS/derivative_voltage.png" alt="Voltage Graph" width="600">
 
-### 🔹 Motor Aktif/Deaktif Durumu (Motor Status)
+### Motor Aktif/Deaktif Durumu (Motor Status)
 
 0x42 kaynak ID'li paket üzerinde **yalnızca Byte 7** tespit edilememişti.  
 
@@ -520,7 +583,7 @@ Grafik analizinde:
 - Gözlemlerde bu davranış tüm kullanım senaryosu boyunca tutarlıydı.  
 - Bu nedenle, **grafik oluşturmaya gerek kalmadan** bu byte doğrudan **Motor Aktif/Deaktif (Motor Status)** olarak işaretlendi.
 
-## 🔹 Süpürge Paketleri: 0x41 Kaynak ID
+## Süpürge Paketleri: 0x41 Kaynak ID
 
 Süpürgeden gelen **tek paket tipi** 0x41 kaynak ID’li paket incelenmiştir.  
 
@@ -528,7 +591,7 @@ Süpürgeden gelen **tek paket tipi** 0x41 kaynak ID’li paket incelenmiştir.
 
       Byte 6 yalnızca 0 ve 1 değerlerini alabildiği için başlangıçta sonraki analize bırakılmıştır.
 
-### 🔹 Byte 3, Byte 4 ve Byte 5 – Motor Devri / Komut Edilen Hız
+### Byte 3, Byte 4 ve Byte 5 – Motor Devri / Komut Edilen Hız
 
 - Byte 3, Byte 4 ve Byte 5 birleştirilerek 24 bitlik bir değer hesaplanmıştır.  
 - Grafikte minimum: 0, maksimum: 128000 değerleri gözlemlenmiştir.  
@@ -539,7 +602,7 @@ Süpürgeden gelen **tek paket tipi** 0x41 kaynak ID’li paket incelenmiştir.
 
 <img src="ASSETS/motor_speed.png" alt="Motor Commanded Velocity Graph" width="600"> <img src="ASSETS/motor_rpm.png" alt="Motor Commanded Velocity Graph" width="600">
 
-#### 🔹 Byte 6 – Tetik Durumu
+#### Byte 6 – Tetik Durumu
 
 - **Byte 6** tamamen **tetik basma / bırakma durumlarını** göstermektedir.  
   → 4 dakikalık kullanım senaryosunda tüm değişiklikler doğrulanmıştır.  
@@ -548,9 +611,15 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 
 ---
 
-# 📝 Sonuç: Çözülen Paketler ve Alanlar
+</details>
 
-## 1️⃣ Süpürgeden Bataryaya Gönderilen Paket (0x41 Kaynak ID)
+## Protokol Referansı
+
+Bu bölüm, tersine mühendislik sonunda elde edilen paket tanımlarını tek yerde toplar. Byte ve bit indeksleri 0'dan başlar.
+
+### Sonuç: Çözülen Paketler ve Alanlar
+
+#### 1️⃣ Süpürgeden Bataryaya Gönderilen Paket (0x41 Kaynak ID)
 
 | Byte | Field | Açıklama |
 |------|------|----------|
@@ -571,7 +640,7 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 
 ---
 
-## 2️⃣ Bataryadan Süpürgeye Gönderilen Paket (0x45 Kaynak ID)
+#### 2️⃣ Bataryadan Süpürgeye Gönderilen Paket (0x45 Kaynak ID)
 
 | Byte | Field | Açıklama |
 |------|------|----------|
@@ -588,7 +657,7 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 
 ---
 
-## 3️⃣ Bataryadan Süpürgeye Gönderilen Paket (0x42 Kaynak ID)
+#### 3️⃣ Bataryadan Süpürgeye Gönderilen Paket (0x42 Kaynak ID)
 
 | Byte | Field | Açıklama |
 |------|------|----------|
@@ -606,7 +675,7 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 | 11   | Checksum_H | Paket checksum |
 | 12   | Packet End | 0xFB |
 
-# 🔹 Anlamlandırılan Byte Oranı (Payload Coverage)
+### Anlamlandırılan Byte Oranı (Payload Coverage)
 
 | Paket | Toplam Byte | Analiz Edilen Byte | Coverage |
 |-------|------------|------------------|----------|
@@ -617,8 +686,6 @@ Diğer byte’larda kullanım senaryosu boyunca hiçbir değişiklik gözlemlenm
 
 > Çözülemeyen byte’lar ya sabit/padding alanlarıdır ya da henüz aktif olmayan protokol field’larıdır.
 > Elde edilen veriler, batarya emulasyonunu yapıp süpürgeyi tüm fonksiyonları ile çalıştırmaya yeterlidir.
-
-</details>
 
 <details>
 <summary><strong>4️⃣ Protokol Emülasyonu</strong></summary>
@@ -666,20 +733,20 @@ Gerekli **BMS devresi** ve diğer çevre birimler eklendiğinde, orijinal batary
 
 Orijinal batarya daha önce bahsettiğimiz **UI+ / UI- pinlerinde**, normal durumda gerilim sağlamaz. Süpürge **tetik basılıp KEY sinyali gönderildiğinde**, belirli bir zaman aşımı süresince **UI beslemesini açar** ve besleme alındığında haberleşmeyi başlatır. Herhangi bir aktivite olmazsa güç tasarrufu için besleme kesilir. Bu nedenle UI hatlarını doğrudan 24V’a bağlayamayız.  
 
-Buna çözüm olarak, **UI hatlarını anahtarlayabileceğimiz bir anahtarlama devresi** kurdum ve ESP32 I/O pinlerine bağladım.  
-Ek güvenlik amacıyla **sistem genel gücünü de anahtarlayabilir** yapmak istedim ve bunun için ayrı bir anahtarlama devresi ile MCU beslemesi için bir **DC-DC düşürücü (buck) dönüştürücü** kullandım. Bu düzenlemeleri **şematiğin power sayfasında** görebilirsiniz. 
+Buna çözüm olarak, **UI hatlarını anahtarlayan bir anahtarlama devresi** oluşturuldu ve ESP32 I/O pinlerine bağlandı.  
+Ek güvenlik amacıyla **sistem genel gücünün de anahtarlanabilmesi** için ayrı bir anahtarlama devresi ile MCU beslemesinde bir **DC-DC düşürücü (buck) dönüştürücü** kullanıldı. Bu düzenlemeler **şematiğin power sayfasında** gösterilmektedir. 
 
 <img src="DOCUMENT/power.png" alt="" width="400"> 
 
-Ayrıca MCU, batarya seviyesini anlık ölçüp süpürgeye bildirmesi gerektiği için **5S seri batarya voltajını 0–3.3V aralığına ölçekleyecek bir gerilim bölücü** ile ADC girişine bağladım. Buradan batarya voltajını ölçebileceğiz.  
+Ayrıca MCU'nun batarya seviyesini anlık ölçüp süpürgeye bildirebilmesi için **5S seri batarya voltajı, 0–3.3V aralığına ölçekleyen bir gerilim bölücü** üzerinden ADC girişine bağlandı. Böylece batarya voltajı ölçülebilmektedir.  
 
 <img src="DOCUMENT/mcu.png" alt="" width="400"> 
 
-Testlerde kullandığım **çift yönlü seviye dönüştürücü (bidirectional level shifter)** yapısı da aynı şekilde şematiğe dahil edilmiştir.  
+Testlerde kullanılan **çift yönlü seviye dönüştürücü (bidirectional level shifter)** yapısı da aynı şekilde şematiğe dahil edilmiştir.  
 
 <img src="DOCUMENT/comm.png" alt="" width="400"> 
 
-Şarj aleti bağlantısını tespit etmek için yine bir **gerilim bölücü** ile şarj girişini dijital IO’ya bağladım.  
+Şarj aleti bağlantısını tespit etmek için şarj girişi yine bir **gerilim bölücü** üzerinden dijital IO’ya bağlandı.  
 
 <img src="DOCUMENT/conn.png" alt="" width="400"> 
 
@@ -694,3 +761,25 @@ Tüm şematik ve PCB projesine [buradan](HARDWARE/G11%20Battery%20Controller) er
 Bataryanın fiziksel kutusunun 3D tasarım dosyaları [buraya](3D/g11%20battery%20case) bakabilirsiniz.
 
 </details>
+
+## Repository Yapısı
+
+| Dizin | İçerik |
+|---|---|
+| `ASSETS/` | Fotoğraflar, grafikler, test görselleri ve GIF'ler |
+| `DOCUMENT/` | Logic analyzer kayıtları, Excel protokol analizi ve şema görselleri |
+| `SOFTWARE/` | ESP32 protokol emülatörü |
+| `HARDWARE/` | Batarya denetleyici şematik ve PCB projesi |
+| `3D/` | Batarya kutusu tasarım dosyaları |
+
+## Proje Durumu
+
+Bu çalışma **tamamlanmış bir reverse-engineering ve proof-of-concept emülasyon projesidir**.
+
+- Reverse engineering: **Tamamlandı**
+- Protokol emülasyonu: **Tamamlandı**
+- Donanım tasarımı: **Tamamlandı**
+- Firmware proof of concept: **Tamamlandı**
+- Yeni protokol analizi: **Planlanmıyor**
+
+Bazı payload byte'ları test sırasında değişmediği veya gösterilen emülasyon için gerekli olmadığı için tanımlanmamıştır. Projenin hedeflediği işlevsel emülasyon mevcut veri ve uygulama ile doğrulanmıştır.
