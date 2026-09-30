@@ -402,7 +402,9 @@ Senaryoda hangi anda hangi işlemin yapıldığı tabloya döküldü:
 
 ---
 
-## 📊 Payload Korelasyonu ve Batarya Seviyesi\n\n> **Not:** Bu dokümanda byte ve bit indeksleri 0'dan başlamaktadır.
+## 📊 Payload Korelasyonu ve Batarya Seviyesi
+
+> **Not:** Bu dokümanda byte ve bit indeksleri 0'dan başlamaktadır.
 
 - Kullanım senaryosu sırasında **lojik analizör** ile eş zamanlı olarak veri kaydedildi.  
 - Excel tablosuna paketler aktarıldı, önceki formüller ve sütunlar kullanıldı.  
