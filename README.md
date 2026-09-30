@@ -453,7 +453,7 @@ Amaç: protokoldeki aynı ana denk gelen paketlerdeki değişimleri analiz etmek
 
 #### 0x45 Kaynak ID’li Paket
 
-- Bu pakette **temsil edilemeyen 2 byte** kaldı, bu değerlerin BMS hata/durum bayrakları olduğu varsayıldı şuan batarya sağlam olup bu durumlar oluşturlamayacağı için mevcut analiz kapsamında pas geçildi.
+- Bu pakette henüz anlamlandırılamayan **2 byte** bulunmaktadır. Bu alanların BMS hata veya durum bayrakları olduğu düşünülmektedir. Kullanılan batarya sağlıklı olduğundan ilgili hata durumları oluşturulamadı ve bu alanlar mevcut analiz kapsamında incelenmedi.
 
 #### 0x42 Kaynak ID’li Paket
 
