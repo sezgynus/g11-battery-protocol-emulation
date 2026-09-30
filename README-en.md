@@ -465,7 +465,7 @@ The purpose was to analyze changes in protocol packets corresponding to those ex
 
 - Peaks reaching a value of approximately **500 around the 45th second** were observed.
 - The behavior before and after these peaks matched vacuum start/stop operations and fluctuations caused by blocking the airflow.
-- According to the device specifications, the vacuum is rated at **500W**.
+- According to the device specifications, the vacuum is rated at **500 W**.
 - Taken together, these findings strongly support the interpretation that this **16-bit field represents power consumption in watts**.
 
 ### 🔖 Power Consumption Graph
