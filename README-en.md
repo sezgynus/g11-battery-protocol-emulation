@@ -320,26 +320,26 @@ checksum verification was applied to the **entire dataset**:
 The formula below determines which bytes are included in the checksum according to the packet type and calculates the checksum:
 
 ```
-=EĞER([@1]=41;
-    DEC2HEX(TOPLA(HEX2DEC([@1]);HEX2DEC([@2]);HEX2DEC([@3]);HEX2DEC([@4]);HEX2DEC([@5]);HEX2DEC([@6]);HEX2DEC([@7]);HEX2DEC([@8]);HEX2DEC([@9]);HEX2DEC([@10]));4);
-EĞER([@1]=45;
-    DEC2HEX(TOPLA(HEX2DEC([@1]);HEX2DEC([@2]);HEX2DEC([@3]);HEX2DEC([@4]);HEX2DEC([@5]);HEX2DEC([@6]));4);
-EĞER([@1]=42;
-    DEC2HEX(TOPLA(HEX2DEC([@1]);HEX2DEC([@2]);HEX2DEC([@3]);HEX2DEC([@4]);HEX2DEC([@5]);HEX2DEC([@6]);HEX2DEC([@7]));4)
+=IF([@1]=41,
+    DEC2HEX(SUM(HEX2DEC([@1]),HEX2DEC([@2]),HEX2DEC([@3]),HEX2DEC([@4]),HEX2DEC([@5]),HEX2DEC([@6]),HEX2DEC([@7]),HEX2DEC([@8]),HEX2DEC([@9]),HEX2DEC([@10])),4),
+IF([@1]=45,
+    DEC2HEX(SUM(HEX2DEC([@1]),HEX2DEC([@2]),HEX2DEC([@3]),HEX2DEC([@4]),HEX2DEC([@5]),HEX2DEC([@6])),4),
+IF([@1]=42,
+    DEC2HEX(SUM(HEX2DEC([@1]),HEX2DEC([@2]),HEX2DEC([@3]),HEX2DEC([@4]),HEX2DEC([@5]),HEX2DEC([@6]),HEX2DEC([@7])),4)
 )))
 ```
 
 In the **Checksum OK?** column, the following formula returns OK or ERROR depending on whether the calculated checksum matches the value in the checksum field:
 
 ```
-=EĞER([@Checksum]=
-EĞER([@1]=41;
-  DEC2HEX(BİTVEYA(BİTSOLAKAYDIR(HEX2DEC([@12]);8);HEX2DEC([@11]));4);
-EĞER([@1]=45;
-  DEC2HEX(BİTVEYA(BİTSOLAKAYDIR(HEX2DEC([@8]);8);HEX2DEC([@7]));4);
-EĞER([@1]=42;
-  DEC2HEX(BİTVEYA(BİTSOLAKAYDIR(HEX2DEC([@9]);8);HEX2DEC([@8]));4);0
-)));"OK";"ERROR")
+=IF([@Checksum]=
+IF([@1]=41,
+  DEC2HEX(BITOR(BITLSHIFT(HEX2DEC([@12]),8),HEX2DEC([@11])),4),
+IF([@1]=45,
+  DEC2HEX(BITOR(BITLSHIFT(HEX2DEC([@8]),8),HEX2DEC([@7])),4),
+IF([@1]=42,
+  DEC2HEX(BITOR(BITLSHIFT(HEX2DEC([@9]),8),HEX2DEC([@8])),4),0
+))),"OK","ERROR")
 ```
 
 #### 📷 Excel Checksum Field Verification
