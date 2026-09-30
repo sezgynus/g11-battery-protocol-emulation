@@ -395,7 +395,9 @@ The operations performed at each point in time were recorded in a table:
 
 ---
 
-## 📊 Payload Correlation and Battery Level\n\n> **Note:** Byte and bit indices in this document are zero-based.
+## 📊 Payload Correlation and Battery Level
+
+> **Note:** Byte and bit indices in this document are zero-based.
 
 - During the usage scenario, data was captured simultaneously with the **logic analyzer**.
 - Packets were transferred to the Excel table using the previously created formulas and columns.
